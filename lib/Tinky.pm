@@ -1,18 +1,43 @@
 use v6;
 
+=begin pod
+
+=head1 NAME
+
+Tinky - a basic and experimental Workflow/State Machine implementation
+
+=head1 SYNOPSIS
+
+=head1 DESCRIPTION
+
+=end pod
+
 module Tinky {
 
-    class X::InvalidState is Exception {
-        has $.state;
-        has $.transition;
+    # Stub here, definition below
+    class State { ... };
+    class Transition { ... }
+    class Workflow { ... };
+    role Object { ... };
+
+    class X::Workflow is Exception {
+        has State       $.state;
+        has Transition  $.transition;
+    }
+
+    class X::InvalidState is X::Workflow {
         method message() {
-            "State '{ $!state.Str }' is not valid for Transition '{ $!transition.Str }'";
+            "State '{ $.state.Str }' is not valid for Transition '{ $.transition.Str }'";
         }
     }
 
-    # Stub here, definition below
-    class Transition { ... }
-    role Object { ... };
+    class X::InvalidTransition is X::Workflow {
+        method message() {
+            "Transition '{ $.transition.Str }' is not valid for State '{ $.state.Str }'";
+        }
+    }
+    
+
 
     class State {
         has Str $.name is required;
@@ -40,11 +65,11 @@ module Tinky {
         has State $.to;
 
         # defined in terms of State so we only need to change once
-        multi method ACCEPTS(State:D $state) {
+        multi method ACCEPTS(State:D $state) returns Bool {
             return self.from ~~ $state;
         }
 
-        multi method ACCEPTS(Object:D $object) {
+        multi method ACCEPTS(Object:D $object) returns Bool {
             return self.from ~~ $object.state;
         }
     }
@@ -84,15 +109,21 @@ module Tinky {
             self does $wf.role;
         }
 
-        multi method ACCEPTS(State:D $state) {
+        multi method ACCEPTS(State:D $state) returns Bool {
             return $!state ~~ $state;
         }
 
-        multi method ACCEPTS(Transition:D $trans) {
+        multi method ACCEPTS(Transition:D $trans) returns Bool {
             return $!state ~~ $trans;
         }
 
-        method apply-transition(Transition $trans) {
+        method apply-transition(Transition $trans) returns State {
+            if self ~~ $trans {
+                $!state = $trans.to;
+            }
+            else {
+                X::InvalidTransition.new(state => $!state, transition => $trans).throw;
+            }
         }
     }
 }
