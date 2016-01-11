@@ -10,8 +10,26 @@ module Tinky {
         }
     }
 
+    # Stub here, definition below
+    class Transition { ... }
+    role Object { ... };
+
     class State {
-        has Str $.name;
+        has Str $.name is required;
+
+        multi method ACCEPTS(State:D $state) returns Bool {
+            # naive approach for the time being
+            return self.name eq $state.name;
+        }
+
+        # define in terms of above so only need to change once
+        multi method ACCEPTS(Transition:D $transition) returns Bool {
+            return self ~~ $transition.from;
+        }
+
+        multi method ACCEPTS(Object:D $object) returns Bool {
+            return self ~~ $object.state;
+        }
 
     }
 
@@ -21,9 +39,16 @@ module Tinky {
         has State $.from;
         has State $.to;
 
+        # defined in terms of State so we only need to change once
+        multi method ACCEPTS(State:D $state) {
+            return self.from ~~ $state;
+        }
+
+        multi method ACCEPTS(Object:D $object) {
+            return self.from ~~ $object.state;
+        }
     }
 
-    role Object { ... };
 
     class Workflow {
 
@@ -57,6 +82,14 @@ module Tinky {
         method apply-workflow(Workflow $wf) {
             $!workflow = $wf;
             self does $wf.role;
+        }
+
+        multi method ACCEPTS(State:D $state) {
+            return $!state ~~ $state;
+        }
+
+        multi method ACCEPTS(Transition:D $trans) {
+            return $!state ~~ $trans;
         }
 
         method apply-transition(Transition $trans) {
