@@ -36,6 +36,15 @@ module Tinky {
             "Transition '{ $.transition.Str }' is not valid for State '{ $.state.Str }'";
         }
     }
+
+    class X::NoWorkflow is Exception {
+        has Str $.message = "No workflow defined";
+
+    }
+
+    class X::NoTransitions is Exception {
+        has Str $.message = "No Transitions defined in workflow";
+    }
     
 
 
@@ -84,6 +93,27 @@ module Tinky {
 
         has Mu $!role;
 
+        method states() {
+            if not @!states.elems {
+                if @!transitions {
+                    @!states = @!transitions.map({ $_.from, $_.to }).flat.unique;
+                }
+                else {
+                    X::NoTransitions.new.throw;
+                }
+            }
+            @!states;
+        }
+
+        method transitions-for-state(State:D $state ) {
+            @!transitions.grep($state);
+        }
+
+        # I'm half tempted to have this throw if there is more than one
+        multi method find-transition(State:D $from, State:D $to) {
+            return self.transitions-for-state($from).first({ $_.to ~~ $to }); 
+        }
+
         method role() {
             if not $!role.defined {
                 $!role = role { };
@@ -115,6 +145,28 @@ module Tinky {
 
         multi method ACCEPTS(Transition:D $trans) returns Bool {
             return $!state ~~ $trans;
+        }
+
+        method transitions() {
+            my @trans;
+            if $!workflow.defined {
+                @trans = $!workflow.transitions-for-state($!state);
+            }
+            else {
+                X::NoWorkflow.new.throw;
+            }
+            @trans;
+        }
+
+        method transition-for-state(State:D $to-state) {
+            my $trans;
+            if $!workflow.defined {
+                $trans = $!workflow.find-transition($!state, $to-state);
+            }
+            else {
+                X::NoWorkflow.new.throw;
+            }
+            $trans;
         }
 
         method apply-transition(Transition $trans) returns State {
