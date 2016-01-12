@@ -31,6 +31,7 @@ for @states.rotor(2 => -1) -> ($from, $to) {
 
 my $obj = FooTest.new(state => @states[0]);
 
+
 throws-like { $obj.transitions }, X::NoWorkflow, "'transitions' throws without workflow";
 throws-like { $obj.transition-for-state(@states[0]) }, X::NoWorkflow, "'transition-for-state' throws without workflow";
 
@@ -48,6 +49,14 @@ for @transitions -> $trans {
     }
     lives-ok { $obj."{ $trans.name }"() }, "'{ $trans.name }' method works";
     is $obj.state, $trans.to, "and it got changed to the '{ $trans.to.name }' state";
+}
+
+$obj = FooTest.new();
+$obj.apply-workflow($wf);
+
+for @states -> $state {
+    lives-ok { $obj.state = $state }, "set state to '{ $state.name }' by assigning to current-state";
+    ok $obj.state ~~ $state , "and it is the expected state";
 }
 
 done-testing;
