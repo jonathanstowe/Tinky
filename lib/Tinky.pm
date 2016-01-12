@@ -15,10 +15,10 @@ Tinky - a basic and experimental Workflow/State Machine implementation
 module Tinky {
 
     # Stub here, definition below
-    class State { ... };
+    class State      { ... };
     class Transition { ... }
-    class Workflow { ... };
-    role Object { ... };
+    class Workflow   { ... };
+    role Object      { ... };
 
     class X::Workflow is Exception {
         has State       $.state;
@@ -59,7 +59,7 @@ module Tinky {
     class State {
         has Str $.name is required;
 
-        has Supplier $!enter-supplier = Supplier.new;
+        has Supplier $!enter-supplier  = Supplier.new;
         has Supplier $!leave-supplier  = Supplier.new;
 
         multi method ACCEPTS(State:D $state) returns Bool {
@@ -102,6 +102,8 @@ module Tinky {
         has State $.from;
         has State $.to;
 
+        has Supplier $!supplier = Supplier.new;
+
         # defined in terms of State so we only need to change once
         multi method ACCEPTS(State:D $state) returns Bool {
             return self.from ~~ $state;
@@ -114,6 +116,11 @@ module Tinky {
         method applied(Object:D $object) {
             self.from.leave($object);
             self.to.enter($object);
+            $!supplier.emit($object);
+        }
+
+        method supply() returns Supply {
+            $!supplier.Supply;
         }
 
         method Str() {
@@ -145,7 +152,7 @@ module Tinky {
         }
 
         has Supply $!enter-supply;
-        method enter-supply() {
+        method enter-supply() returns Supply {
             $!enter-supply //= do {
                 my @supplies = self.states.map(-> $state { $state.enter-supply.map(-> $value { $state, $value }) });
                 Supply.merge(@supplies);
@@ -154,12 +161,21 @@ module Tinky {
         }
 
         has Supply $!leave-supply;
-        method leave-supply() {
+        method leave-supply() returns Supply {
             $!leave-supply //= do {
                 my @supplies = self.states.map(-> $state { $state.leave-supply.map(-> $value { $state, $value }) });
                 Supply.merge(@supplies);
             }
             $!leave-supply;
+        }
+
+        has Supply $!transition-supply;
+        method transition-supply() returns Supply {
+            $!transition-supply //= do {
+                my @supplies = self.transitions.map( -> $transition { $transition.supply.map(-> $value { $transition, $value }) });
+                Supply.merge(@supplies);
+            }
+            $!transition-supply;
         }
 
         method transitions-for-state(State:D $state ) {
