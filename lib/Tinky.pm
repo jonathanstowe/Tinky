@@ -59,6 +59,9 @@ module Tinky {
     class State {
         has Str $.name is required;
 
+        has Supplier $!enter-supplier = Supplier.new;
+        has Supplier $!leave-supplier  = Supplier.new;
+
         multi method ACCEPTS(State:D $state) returns Bool {
             # naive approach for the time being
             return self.name eq $state.name;
@@ -75,6 +78,14 @@ module Tinky {
 
         method Str() {
             $!name;
+        }
+
+        method enter(Object:D $object) {
+            $!enter-supplier.emit($object);
+        }
+
+        method leave(Object:D $object) {
+            $!leave-supplier.emit($object);
         }
     }
 
@@ -153,8 +164,9 @@ module Tinky {
             $!state;
         }
 
+        has $!state-proxy;
         method state(Object:D $SELF:) is rw {
-            state $proxy = Proxy.new(
+            $!state-proxy //= Proxy.new(
                 FETCH => method () {
                     $SELF!state;
                 },
@@ -173,7 +185,7 @@ module Tinky {
                     $SELF!state;
                 }
             );
-            $proxy;
+            $!state-proxy;
         }
 
         method apply-workflow(Workflow $wf) {
