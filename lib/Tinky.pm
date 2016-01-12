@@ -80,8 +80,15 @@ module Tinky {
             $!name;
         }
 
+        method enter-supply() {
+            $!enter-supplier.Supply;
+        }
         method enter(Object:D $object) {
             $!enter-supplier.emit($object);
+        }
+
+        method leave-supply() {
+            $!leave-supplier.Supply;
         }
 
         method leave(Object:D $object) {
@@ -104,9 +111,15 @@ module Tinky {
             return self.from ~~ $object.state;
         }
 
+        method applied(Object:D $object) {
+            self.from.leave($object);
+            self.to.enter($object);
+        }
+
         method Str() {
             $!name;
         }
+
     }
 
 
@@ -129,6 +142,24 @@ module Tinky {
                 }
             }
             @!states;
+        }
+
+        has Supply $!enter-supply;
+        method enter-supply() {
+            $!enter-supply //= do {
+                my @supplies = self.states.map(-> $state { $state.enter-supply.map(-> $value { $state, $value }) });
+                Supply.merge(@supplies);
+            }
+            $!enter-supply;
+        }
+
+        has Supply $!leave-supply;
+        method leave-supply() {
+            $!leave-supply //= do {
+                my @supplies = self.states.map(-> $state { $state.leave-supply.map(-> $value { $state, $value }) });
+                Supply.merge(@supplies);
+            }
+            $!leave-supply;
         }
 
         method transitions-for-state(State:D $state ) {
@@ -158,20 +189,19 @@ module Tinky {
     role Object {
         has Workflow $!workflow;
 
-        has State $.state is rw;
+        has State $.state;
 
-        method !state() returns State is rw {
+        method !state() is rw returns State {
             $!state;
         }
 
-        has $!state-proxy;
         method state(Object:D $SELF:) is rw {
-            $!state-proxy //= Proxy.new(
+            Proxy.new(
                 FETCH => method () {
                     $SELF!state;
                 },
                 STORE => method (State $val) {
-                    if not $!state.defined {
+                    if not $SELF!state.defined {
                         $SELF!state = $val;
                     }
                     else {
@@ -179,13 +209,12 @@ module Tinky {
                             $SELF.apply-transition($trans);
                         }
                         else {
-                            X::NoTransition.new(from => $SELF!state, to => $val).throw;
+                            X::NoTransition.new(from => $SELF.state, to => $val).throw;
                         }
                     }
                     $SELF!state;
                 }
             );
-            $!state-proxy;
         }
 
         method apply-workflow(Workflow $wf) {
@@ -226,7 +255,8 @@ module Tinky {
         method apply-transition(Transition $trans) returns State {
             if self ~~ $trans {
                 # Needs to be through the proxy here
-                self.state = $trans.to;
+                $!state = $trans.to;
+                $trans.applied(self);
                 $!state;
             }
             else {
