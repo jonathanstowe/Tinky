@@ -25,6 +25,7 @@ lives-ok { $wf = Tinky::Workflow.new(:@transitions) }, "create new workflow with
 
 my @enter;
 my @leave;
+my @trans-events;
 
 my $obj = FooTest.new();
 $obj.apply-workflow($wf);
@@ -33,6 +34,7 @@ lives-ok { $wf.enter-supply.act( -> $ ( $state, $object) { @enter.push($state.na
 lives-ok { $wf.enter-supply.act( -> $ ( $state, $object) {isa-ok $state, Tinky::State }) }, "set up tap on enter-supply";
 lives-ok { $wf.leave-supply.act( -> $ ( $state, $object) { @leave.push($state.name); }) }, "set up tap on leave-supply";
 lives-ok { $wf.leave-supply.act(-> $ ( $state, $obj ) { isa-ok $state, Tinky::State } ) }, "set up tap on leave-supply";
+lives-ok { $wf.transition-supply.act( -> $ ( $transition, $object ) { isa-ok $transition, Tinky::Transition; does-ok $object, Tinky::Object; @trans-events.push($transition.name) } ) }, "set up tap on transition-supply";
 
 for @states -> $state {
     my $old-state = $obj.state;
@@ -42,6 +44,7 @@ for @states -> $state {
 
 is-deeply @enter, [<two three four>], "got the right enter events";
 is-deeply @leave, [<one two three>], "got the right leave events";
+is-deeply @trans-events, [ <one-two two-three three-four> ], "got the right transition events";
 
 done-testing;
 # vim: expandtab shiftwidth=4 ft=perl6
