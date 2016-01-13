@@ -67,6 +67,13 @@ module Tinky {
     class X::NoTransitions is Exception {
         has Str $.message = "No Transitions defined in workflow";
     }
+
+    class X::TransitionRejected is Exception {
+        has Transition $.transition;
+        method message() {
+            "Transition '{ $!transition.Str }' was rejected by one or more validators";
+        }
+    }
     
 
 
@@ -324,10 +331,14 @@ module Tinky {
 
         method apply-transition(Transition $trans) returns State {
             if self ~~ $trans {
-                # Needs to be through the proxy here
-                $!state = $trans.to;
-                $trans.applied(self);
-                $!state;
+                if await $trans.validate-apply(self) {
+                    $!state = $trans.to;
+                    $trans.applied(self);
+                    $!state;
+                }
+                else {
+                    X::TransitionRejected.new(transition => $trans).throw;
+                }
             }
             else {
                 X::InvalidTransition.new(state => $!state, transition => $trans).throw;
