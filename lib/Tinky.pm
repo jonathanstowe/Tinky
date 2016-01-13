@@ -34,7 +34,10 @@ module Tinky {
         run($object);
     }
 
-    class X::Workflow is Exception {
+    class X::Fail is Exception {
+    }
+
+    class X::Workflow is X::Fail {
         has State       $.state;
         has Transition  $.transition;
     }
@@ -51,7 +54,7 @@ module Tinky {
         }
     }
 
-    class X::NoTransition is Exception {
+    class X::NoTransition is X::Fail {
         has State $.from;
         has State $.to;
         method message() {
@@ -59,20 +62,24 @@ module Tinky {
         }
     }
 
-    class X::NoWorkflow is Exception {
+    class X::NoWorkflow is X::Fail {
         has Str $.message = "No workflow defined";
 
     }
 
-    class X::NoTransitions is Exception {
+    class X::NoTransitions is X::Fail {
         has Str $.message = "No Transitions defined in workflow";
     }
 
-    class X::TransitionRejected is Exception {
+    class X::TransitionRejected is X::Fail {
         has Transition $.transition;
         method message() {
             "Transition '{ $!transition.Str }' was rejected by one or more validators";
         }
+    }
+
+    class X::NoState is X::Fail {
+        has Str $.message = "No current state";
     }
     
 
@@ -330,18 +337,29 @@ module Tinky {
         }
 
         method apply-transition(Transition $trans) returns State {
-            if self ~~ $trans {
-                if await $trans.validate-apply(self) {
-                    $!state = $trans.to;
-                    $trans.applied(self);
-                    $!state;
+            if $!state.defined {
+                if self ~~ $trans {
+                    if await $trans.validate-apply(self) {
+                        $!state = $trans.to;
+                        $trans.applied(self);
+                        $!state;
+                    }
+                    else {
+                        X::TransitionRejected.new(transition => $trans).throw;
+                    }
                 }
                 else {
-                    X::TransitionRejected.new(transition => $trans).throw;
+                    if $!state.defined {
+                        X::InvalidTransition.new(state => $!state, transition => $trans).throw;
+                    }
+                    else {
+                        X::NoState.new.throw;
+                    }
+
                 }
             }
             else {
-                X::InvalidTransition.new(state => $!state, transition => $trans).throw;
+                X::NoState.new.throw;
             }
         }
     }

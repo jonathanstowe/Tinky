@@ -23,6 +23,8 @@ for @transitions -> $trans {
     is $obj.state, $trans.to, "and it is in the expected state";
 }
 
+$obj = FooTest.new;
+throws-like {  $obj.apply-transition(@transitions[0]) }, X::NoState, "should throw X::NoState with apply-transition and state not set";
 
 done-testing;
 # vim: expandtab shiftwidth=4 ft=perl6
