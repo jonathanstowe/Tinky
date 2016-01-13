@@ -22,6 +22,18 @@ module Tinky {
 
     subset ValidateCallback of Callable where { $_.signature.params && $_.signature ~~ :(Object --> Bool) };
 
+    # This doesn't need any state and can be used by both Transition and State
+    # The @subs isn't constrained but they should be ValidateCallbacks
+    my sub validate-helper(Object $object, @subs) returns Promise {
+        my sub run(|c) {
+            my @promises = do for @subs.grep( -> $v { c ~~ $v.signature  }) -> &callback {
+                start { callback(|c) };
+            }
+            Promise.allof(@promises).then({ so all(@promises>>.result) })
+        }
+        run($object);
+    }
+
     class X::Workflow is Exception {
         has State       $.state;
         has Transition  $.transition;
@@ -109,13 +121,7 @@ module Tinky {
                     @!enter-validators;
                 }
             }
-            my sub run(|c) {
-                my @promises = do for @subs.grep( -> $v { c ~~ $v.signature  }) -> &callback {
-                    start { callback(|c) };
-                }
-                Promise.allof(@promises).then({ so all(@promises>>.result) })
-            }
-            run($object)
+            validate-helper($object, @subs);
         }
 
         method leave-supply() {
@@ -135,6 +141,8 @@ module Tinky {
 
         has Supplier $!supplier = Supplier.new;
 
+        has ValidateCallback @.validators;
+
         # defined in terms of State so we only need to change once
         multi method ACCEPTS(State:D $state) returns Bool {
             return self.from ~~ $state;
@@ -148,6 +156,10 @@ module Tinky {
             self.from.leave($object);
             self.to.enter($object);
             $!supplier.emit($object);
+        }
+
+        method validate(Object:D $object) returns Promise {
+            validate-helper($object, @!validators);
         }
 
         method supply() returns Supply {
