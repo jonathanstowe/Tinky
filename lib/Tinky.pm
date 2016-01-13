@@ -20,6 +20,8 @@ module Tinky {
     class Workflow   { ... };
     role Object      { ... };
 
+    subset ValidateCallback of Callable where { $_.signature.params && $_.signature ~~ :(Object --> Bool) };
+
     class X::Workflow is Exception {
         has State       $.state;
         has Transition  $.transition;
@@ -62,6 +64,9 @@ module Tinky {
         has Supplier $!enter-supplier  = Supplier.new;
         has Supplier $!leave-supplier  = Supplier.new;
 
+        has ValidateCallback @.enter-validators;
+        has ValidateCallback @.leave-validators;
+
         multi method ACCEPTS(State:D $state) returns Bool {
             # naive approach for the time being
             return self.name eq $state.name;
@@ -80,11 +85,31 @@ module Tinky {
             $!name;
         }
 
+        method validate-enter(Object $object) returns Promise {
+            my sub run(|c) {
+                my @promises = do for @!enter-validators.grep( -> $v { c ~~ $v.signature  }) -> &callback {
+                    start { callback(|c) };
+                }
+                Promise.allof(@promises).then({ so all(@promises>>.result) })
+            }
+            run($object)
+        }
+
         method enter-supply() {
             $!enter-supplier.Supply;
         }
         method enter(Object:D $object) {
             $!enter-supplier.emit($object);
+        }
+
+        method validate-leave(Object $object) returns Promise {
+            my sub run(|c) {
+                my @promises = do for @!leave-validators.grep( -> $v { c ~~ $v.signature  }) -> &callback {
+                    start { callback(|c) };
+                }
+                Promise.allof(@promises).then({ so all(@promises>>.result) })
+            }
+            run($object)
         }
 
         method leave-supply() {
