@@ -86,13 +86,7 @@ module Tinky {
         }
 
         method validate-enter(Object $object) returns Promise {
-            my sub run(|c) {
-                my @promises = do for @!enter-validators.grep( -> $v { c ~~ $v.signature  }) -> &callback {
-                    start { callback(|c) };
-                }
-                Promise.allof(@promises).then({ so all(@promises>>.result) })
-            }
-            run($object)
+            self!validate-phase('enter', $object);
         }
 
         method enter-supply() {
@@ -103,8 +97,20 @@ module Tinky {
         }
 
         method validate-leave(Object $object) returns Promise {
+            self!validate-phase('leave', $object);
+        }
+
+        method !validate-phase(Str $phase where 'enter'|'leave', Object $object) returns Promise {
+            my @subs = do given $phase {
+                when 'leave' {
+                    @!leave-validators;
+                }
+                when 'enter' {
+                    @!enter-validators;
+                }
+            }
             my sub run(|c) {
-                my @promises = do for @!leave-validators.grep( -> $v { c ~~ $v.signature  }) -> &callback {
+                my @promises = do for @subs.grep( -> $v { c ~~ $v.signature  }) -> &callback {
                     start { callback(|c) };
                 }
                 Promise.allof(@promises).then({ so all(@promises>>.result) })
