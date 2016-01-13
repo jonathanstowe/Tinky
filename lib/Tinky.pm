@@ -159,6 +159,11 @@ module Tinky {
             }
             $!enter-supply;
         }
+        
+        has Supply $!final-supply;
+        method final-supply() returns Supply {
+            $!final-supply //= self.enter-supply.grep( -> $ ($state, $object) { !?self.transitions-for-state($state) } );
+        }
 
         has Supply $!leave-supply;
         method leave-supply() returns Supply {
