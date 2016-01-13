@@ -46,5 +46,27 @@ nok do {  await  $trans.validate(ObjectOne.new) }, "Transition.validate with a s
 nok do {  await $trans.validate(ObjectTwo.new) }, "Transition.validate with a specific False validator but a non-specific False validator";
 nok do {  await  $trans.validate(ObjectThree.new) }, "Transition.validate with no specific validator but a non-specific False validator";
 
+$trans = Tinky::Transition.new(name => 'test-transition-2', from => Tinky::State.new(name => "foo-2"), to => Tinky::State.new(name => "bar-2"));
+
+ok do {  await  $trans.validate-apply(ObjectOne.new) }, "Transition.validate-apply with no specific validators";
+ok do {  await $trans.validate-apply(ObjectTwo.new) }, "Transition.validate-apply with no specific validators";
+ok do {  await  $trans.validate-apply(ObjectThree.new) }, "Transition.validate-apply with no specific validators";
+
+$trans.validators.push: sub (ObjectOne $) returns Bool { False };
+
+nok do {  await  $trans.validate-apply(ObjectOne.new) }, "Transition.validate-apply with specific False validators on Transiion";
+ok do {  await  $trans.validate-apply(ObjectTwo.new) }, "Transition.validate-apply with specific False validators on Transition on another object";
+ok do {  await  $trans.validate-apply(ObjectThree.new) }, "Transition.validate-apply with specific False validators on Transiion on another object";
+
+$trans.from.leave-validators.push: sub (ObjectTwo $) returns Bool { False };
+nok do {  await  $trans.validate-apply(ObjectOne.new) }, "Transition.validate-apply with specific False validators on Transiion";
+nok do {  await  $trans.validate-apply(ObjectTwo.new) }, "Transition.validate-apply with specific False validators on leave from";
+ok do {  await  $trans.validate-apply(ObjectThree.new) }, "Transition.validate-apply with specific False validators on Transition on another object";
+
+$trans.to.enter-validators.push: sub (ObjectThree $) returns Bool { False };
+nok do {  await  $trans.validate-apply(ObjectOne.new) }, "Transition.validate-apply with specific False validators on Transiion";
+nok do {  await  $trans.validate-apply(ObjectTwo.new) }, "Transition.validate-apply with specific False validators on leave from";
+nok do {  await  $trans.validate-apply(ObjectThree.new) }, "Transition.validate-apply with specific False validators on enter to";
+
 done-testing;
 # vim: expandtab shiftwidth=4 ft=perl6

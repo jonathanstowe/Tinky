@@ -158,8 +158,14 @@ module Tinky {
             $!supplier.emit($object);
         }
 
+        # This just calls the validators for the Transition
         method validate(Object:D $object) returns Promise {
             validate-helper($object, @!validators);
+        }
+
+        method validate-apply(Object:D $object) returns Promise {
+            my @promises = (self.validate($object), self.from.validate-leave($object), self.to.validate-enter($object));
+            Promise.allof(@promises).then({ so all(@promises>>.result)});
         }
 
         method supply() returns Supply {
