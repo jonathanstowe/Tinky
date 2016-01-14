@@ -67,6 +67,11 @@ my $workflow = Tinky::Workflow.new(:@transitions, name => 'ticket-workflow', ini
 
 $workflow.transition-supply.act(-> ($trans, $object) { say "Ticket '{ $object.ticket-number }' went from { $trans.from.name }' to '{ $trans.to.name }'" });
 
+# The final-supply emits the state and the object when a state is reached where there are no
+# further transitions available
+
+$workflow.final-supply.act(-> ( $state, $object) { say "** updating performance stats with Ticket '{ $object.ticket-number }' entered State '{ $state.name }'" });
+
 # Create an instance of the Tinky::Object.
 # A 'state' can be supplied to initialise if, for example, the data was retrieved from a database.
 my $ticket-a = Ticket.new(owner => "Operator A");
