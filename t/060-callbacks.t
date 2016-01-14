@@ -89,5 +89,65 @@ lives-ok { $two.apply-transition(@transitions[0]) }, "another object is okay";
 
 throws-like { $two.apply-transition(@transitions[1]) }, X::TransitionRejected, "transition rejected (with fail on to state)";
 
+# Tests for methods
+# multi sub trait_mod:<is> ( Method $m, :$enter-validator! ) is export
+# multi sub trait_mod:<is> (Method $m, :$leave-validator! ) is export
+# multi sub trait_mod:<is> (Method $m, :$transition-validator! ) is export
+
+class WontLeave does Tinky::Object {}
+class WontEnter does Tinky::Object {}
+class WontApply does Tinky::Object {}
+
+class FooState is Tinky::State {
+    method no-leave(WontLeave $obj) returns Bool is leave-validator {
+        False;
+    }
+    method no-enter(WontEnter $obj) returns Bool is enter-validator {
+        False;
+    }
+}
+
+class FooTransition is Tinky::Transition {
+    method no-apply(WontApply $obj) returns Bool is transition-validator {
+        False;
+    }
+}
+
+my $foo-transition = FooTransition.new(name => 'foo', from => FooState.new(name => 'one'), to => FooState.new(name => 'two'));
+
+ok do { await $foo-transition.to.validate-enter(WontLeave.new) }, "validate-enter with state enter-validator that doesn't match";
+nok do { await $foo-transition.to.validate-enter(WontEnter.new) }, "validate-enter with state enter-validator that does match";
+ok do { await $foo-transition.to.validate-enter(WontApply.new) }, "validate-enter with state enter-validator that doesn't match (transition only)";
+
+nok do { await $foo-transition.to.validate-leave(WontLeave.new) }, "validate-leave with state leave-validator that does match";
+ok do { await $foo-transition.to.validate-leave(WontEnter.new) }, "validate-leave with state leave-validator that doesn't match";
+ok do { await $foo-transition.to.validate-leave(WontApply.new) }, "validate-leave with state leave-validator that doesn't match (transition only)";
+
+ok do { await $foo-transition.validate(WontLeave.new) }, "Transition.validate with validator, no match (has a leve-validate)";
+ok do { await $foo-transition.validate(WontEnter.new) }, "Transition.validate with validator, no match (has an enter-validate)";
+nok do { await $foo-transition.validate(WontApply.new) }, "Transition.validate with validator, with matching transition-validator";
+
+nok do { await $foo-transition.validate-apply(WontLeave.new) }, "Transition.validate-apply with leave-validator";
+nok do { await $foo-transition.validate-apply(WontEnter.new) }, "Transition.validate-apply with validator, with enter-validate)";
+nok do { await $foo-transition.validate-apply(WontApply.new) }, "Transition.validate-apply with validator, with matching transition-validator";
+
+my $new-wf = Tinky::Workflow.new(transitions => @($foo-transition,), name => "foo-workflow");
+
+class SafeOne does Tinky::Object {}
+
+my $wont-leave = WontLeave.new(state => $foo-transition.from);
+$wont-leave.apply-workflow($new-wf);
+throws-like { $wont-leave.apply-transition($foo-transition) }, X::TransitionRejected, "apply-transition fails with leave-validator";
+my $wont-enter = WontEnter.new(state => $foo-transition.from);
+$wont-enter.apply-workflow($new-wf);
+throws-like { $wont-enter.apply-transition($foo-transition) }, X::TransitionRejected, "apply-transition fails with enter-validator";
+my $wont-apply = WontApply.new(state => $foo-transition.from);
+$wont-apply.apply-workflow($new-wf);
+throws-like { $wont-apply.apply-transition($foo-transition) }, X::TransitionRejected, "apply-transition fails with apply-validator";
+my $safe = SafeOne.new(state => $foo-transition.from);
+$safe.apply-workflow($new-wf);
+lives-ok { $safe.apply-transition($foo-transition) }, "object with no specific validators applies fine";
+ok $safe.state ~~ $foo-transition.to, "and the state got changed fine";
+
 done-testing;
 # vim: expandtab shiftwidth=4 ft=perl6
