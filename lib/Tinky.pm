@@ -87,16 +87,18 @@ module Tinky:ver<0.0.1>:auth<github:jonathanstowe> {
     }
 
     class X::InvalidTransition is X::Workflow {
+        has Str $.message;
         method message() {
-            "Transition '{ $.transition.Str }' is not valid for State '{ $.state.Str }'";
+            $!message // "Transition '{ $.transition.Str }' is not valid for State '{ $.state.Str }'";
         }
     }
 
     class X::NoTransition is X::Fail {
         has State $.from;
         has State $.to;
+        has Str   $.message;
         method message() {
-            "No Transition for '{ $.from.Str }' to '{ $.to.Str }'";
+            $!message // "No Transition for '{ $.from.Str }' to '{ $.to.Str }'";
         }
     }
 
@@ -322,18 +324,20 @@ module Tinky:ver<0.0.1>:auth<github:jonathanstowe> {
         method role() {
             if not $!role.^name ne 'Mu' {
                 $!role = role { };
-
-                for @.transitions -> $tran {
-                    if !$!role.can($tran.name) {
-                        try $!role.^add_method($tran.name, method (Object:D:) {
+                for @.transitions.classify(-> $t { $t.name }).kv -> $name, $transitions {
+                    my $method = method () {
+                        if $transitions.grep(self.state).first -> $tran {
                             self.apply-transition($tran);
-                        });
+                        }
+                        else {
+                            X::InvalidTransition.new(message => "No transition '$name' for state '{ self.state.Str }'").throw;
+                        }
                     }
+                    try $!role.^add_method($name, $method);
                 }
             }
             $!role;
         }
-
     }
 
     role Object {
