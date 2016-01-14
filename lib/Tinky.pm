@@ -404,6 +404,11 @@ module Tinky:ver<0.0.1>:auth<github:jonathanstowe> {
             @trans;
         }
 
+        method next-states() {
+            my @states = self.transitions>>.to;
+            @states;
+        }
+
         method transition-for-state(State:D $to-state) {
             my $trans;
             if $!workflow.defined {
