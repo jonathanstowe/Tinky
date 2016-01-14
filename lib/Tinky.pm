@@ -12,7 +12,7 @@ Tinky - a basic and experimental Workflow/State Machine implementation
 
 =end pod
 
-module Tinky {
+module Tinky:ver<0.0.1>:auth<github:jonathanstowe> {
 
     # Stub here, definition below
     class State      { ... };
@@ -54,6 +54,9 @@ module Tinky {
         run($object);
     }
 
+    # find the methods in the supplied object, that would
+    # accept the Object as an argument and then wrap them
+    # as subs with the object to pass to the above
     my sub validate-methods(Mu:D $self, Object $object, ::Phase) {
         my @meths;
         for $self.^methods.grep(Phase) -> $meth {
@@ -232,6 +235,8 @@ module Tinky {
         has State      @.states;
         has Transition @.transitions;
 
+        has State      $.initial-state;
+
         has Mu $!role;
 
         method states() {
@@ -292,9 +297,11 @@ module Tinky {
                 $!role = role { };
 
                 for @.transitions -> $tran {
-                    $!role.^add_method($tran.name, method (Object:D:) {
-                        self.apply-transition($tran);
-                    });
+                    if !$!role.can($tran.name) {
+                        try $!role.^add_method($tran.name, method (Object:D:) {
+                            self.apply-transition($tran);
+                        });
+                    }
                 }
             }
             $!role;
@@ -335,6 +342,10 @@ module Tinky {
 
         method apply-workflow(Workflow $wf) {
             $!workflow = $wf;
+            if not $!state.defined and $!workflow.initial-state.defined {
+                $!state = $!workflow.initial-state;
+                # probably needs an initial supply on the workflow.
+            }
             self does $wf.role;
         }
 

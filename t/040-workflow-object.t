@@ -59,5 +59,21 @@ for @states -> $state {
     ok $obj.state ~~ $state , "and it is the expected state";
 }
 
+subtest {
+
+    my $wf = Tinky::Workflow.new(:@transitions, initial-state => @states[0]);
+    ok $wf.initial-state ~~ @states[0], "just check the initial-state got set";
+    my $obj = FooTest.new();
+    #lives-ok { 
+    $obj.apply-workflow($wf); # }, "apply workflow with an initial-state (object has no state)";
+    ok $obj.state ~~ @states[0], "and the new object now has that state";
+    my $new-state = Tinky::State.new(name => 'new-state');
+    $obj = FooTest.new(state => $new-state);
+    lives-ok { $obj.apply-workflow($wf) }, "apply workflow with an initial-state (object has an existing state)";
+    ok $obj.state ~~ $new-state, "and it retained the original state";
+    nok $obj.state ~~ @states[0], "just check the comparison";
+
+}, "initial state on Workflow";
+
 done-testing;
 # vim: expandtab shiftwidth=4 ft=perl6
