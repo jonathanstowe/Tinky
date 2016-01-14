@@ -54,6 +54,16 @@ module Tinky {
         run($object);
     }
 
+    my sub validate-methods(Mu:D $self, Object $object, ::Phase) {
+        my @meths;
+        for $self.^methods.grep(Phase) -> $meth {
+            if $object.WHAT ~~ $meth.signature.params[1].type  {
+                @meths.push: $meth.assuming($self);
+            }
+        }
+        @meths;
+    }
+
     class X::Fail is Exception {
     }
 
@@ -149,24 +159,15 @@ module Tinky {
         method !validate-phase(Str $phase where 'enter'|'leave', Object $object) returns Promise {
             my @subs = do given $phase {
                 when 'leave' {
-                    (@!leave-validators, self!validate-methods($object, LeaveValidator)).flat;
+                    (@!leave-validators, validate-methods(self, $object, LeaveValidator)).flat;
                 }
                 when 'enter' {
-                    (@!enter-validators, self!validate-methods($object, EnterValidator)).flat;
+                    (@!enter-validators, validate-methods(self, $object, EnterValidator)).flat;
                 }
             }
             validate-helper($object, @subs);
         }
 
-        method !validate-methods(Object $object, ::Phase) {
-            my @meths;
-            for self.^methods.grep(Phase) -> $meth {
-                if $object.WHAT ~~ $meth.signature.params[1].type  {
-                    @meths.push: $meth.assuming(self);
-                }
-            }
-            @meths;
-        }
 
 
         method leave-supply() {
@@ -205,7 +206,7 @@ module Tinky {
 
         # This just calls the validators for the Transition
         method validate(Object:D $object) returns Promise {
-            validate-helper($object, @!validators);
+            validate-helper($object, ( @!validators, validate-methods(self, $object, TransitionValidator)).flat);
         }
 
         method validate-apply(Object:D $object) returns Promise {
