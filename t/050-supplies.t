@@ -23,6 +23,11 @@ my Tinky::Workflow $wf;
 
 lives-ok { $wf = Tinky::Workflow.new(:@transitions) }, "create new workflow with transitions";
 
+my Int $applied = 0;
+
+lives-ok { $wf.applied-supply.act(-> $obj { does-ok $obj, Tinky::Object, "applied-supply got a Tinky::Object"; $applied++ }) }, "tap the workflow applied-supply";
+
+
 my @enter;
 my @leave;
 my @trans-events;
@@ -49,6 +54,7 @@ is-deeply @leave, [<one two three>], "got the right leave events";
 is-deeply @trans-events, [ <one-two two-three three-four> ], "got the right transition events";
 
 ok $final, "and got the final event";
+is $applied, 1, "and we saw the application of the workflow";
 
 done-testing;
 # vim: expandtab shiftwidth=4 ft=perl6

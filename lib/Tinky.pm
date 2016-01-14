@@ -251,6 +251,16 @@ module Tinky:ver<0.0.1>:auth<github:jonathanstowe> {
             @!states;
         }
 
+        has Supplier $!applied-supplier = Supplier.new;
+
+        method applied(Object:D $object) {
+            $!applied-supplier.emit($object);
+        }
+
+        method applied-supply() returns Supply {
+            $!applied-supplier.Supply;
+        }
+
         has Supply $!enter-supply;
         method enter-supply() returns Supply {
             $!enter-supply //= do {
@@ -344,9 +354,9 @@ module Tinky:ver<0.0.1>:auth<github:jonathanstowe> {
             $!workflow = $wf;
             if not $!state.defined and $!workflow.initial-state.defined {
                 $!state = $!workflow.initial-state;
-                # probably needs an initial supply on the workflow.
             }
             self does $wf.role;
+            $wf.applied(self);;
         }
 
         multi method ACCEPTS(State:D $state) returns Bool {
