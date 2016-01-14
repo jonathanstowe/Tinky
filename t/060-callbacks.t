@@ -149,5 +149,40 @@ $safe.apply-workflow($new-wf);
 lives-ok { $safe.apply-transition($foo-transition) }, "object with no specific validators applies fine";
 ok $safe.state ~~ $foo-transition.to, "and the state got changed fine";
 
+# Test for workflow application validation
+
+class WorkflowGood does Tinky::Object {}
+class WorkflowBad  does Tinky::Object {}
+
+my $apply-workflow = Tinky::Workflow.new;
+
+$apply-workflow.validators.push: sub (WorkflowBad $obj) returns Bool { False };
+
+ok do { await $apply-workflow.validate-apply(WorkflowGood.new) }, "Workflow.validate-apply with no validator";
+nok do { await $apply-workflow.validate-apply(WorkflowBad.new) }, "Workflow.validate-apply with False validator";
+$apply-workflow.validators.push: sub (WorkflowGood $obj) returns Bool { True };
+ok do { await $apply-workflow.validate-apply(WorkflowGood.new) }, "Workflow.validate-apply with True validator";
+
+throws-like { WorkflowBad.new.apply-workflow($apply-workflow) }, X::ObjectRejected, "Workflow.apply-workflow with False validate as sub";
+lives-ok { WorkflowGood.new.apply-workflow($apply-workflow) }, "Workflow.apply-workflow with True validate as sub";
+
+class TestWorkflow is Tinky::Workflow {
+    method reject-bad(WorkflowBad $obj) returns Bool is apply-validator {
+        False;
+    }
+    method accept-good(WorkflowGood $obj) returns Bool is apply-validator {
+        True;
+    }
+}
+
+my $apply-wf-meths = TestWorkflow.new;
+
+nok do { await $apply-wf-meths.validate-apply(WorkflowBad.new) }, "Workflow.validate-apply with False validator as method";
+ok do { await $apply-wf-meths.validate-apply(WorkflowGood.new) }, "Workflow.validate-apply with True validator as method";
+
+throws-like { WorkflowBad.new.apply-workflow($apply-wf-meths) }, X::ObjectRejected, "Workflow.apply-workflow with False validate as method";
+lives-ok { WorkflowGood.new.apply-workflow($apply-wf-meths) }, "Workflow.apply-workflow with True validate as method";
+
+
 done-testing;
 # vim: expandtab shiftwidth=4 ft=perl6

@@ -24,19 +24,24 @@ module Tinky:ver<0.0.1>:auth<github:jonathanstowe> {
     # The roles are only used to indicate the purpose of the
     # methods for the time being.
 
-    role EnterValidator { }
+    my role EnterValidator { }
     multi sub trait_mod:<is> ( Method $m, :$enter-validator! ) is export {
         $m does EnterValidator;
     }
 
-    role LeaveValidator { }
+    my role LeaveValidator { }
     multi sub trait_mod:<is> (Method $m, :$leave-validator! ) is export {
         $m does LeaveValidator;
     }
 
-    role TransitionValidator { }
+    my role TransitionValidator { }
     multi sub trait_mod:<is> (Method $m, :$transition-validator! ) is export {
         $m does TransitionValidator;
+    }
+
+    my role ApplyValidator { }
+    multi sub trait_mod:<is> (Method $m, :$apply-validator! ) is export {
+        $m does ApplyValidator;
     }
 
 
@@ -111,11 +116,17 @@ module Tinky:ver<0.0.1>:auth<github:jonathanstowe> {
         }
     }
 
+    class X::ObjectRejected is X::Fail {
+        has Workflow $.workflow;
+        method message() {
+            "The Workflow '{ $!workflow.Str }' rejected the object at apply";
+        }
+    }
+
     class X::NoState is X::Fail {
         has Str $.message = "No current state";
     }
     
-
 
     class State {
         has Str $.name is required;
@@ -237,6 +248,12 @@ module Tinky:ver<0.0.1>:auth<github:jonathanstowe> {
 
         has State      $.initial-state;
 
+        has ValidateCallback @.validators;
+
+        method validate-apply(Object:D $object) returns Promise {
+            validate-helper($object, ( @!validators, validate-methods(self, $object, ApplyValidator)).flat);
+        }
+
         has Mu $!role;
 
         method states() {
@@ -351,12 +368,17 @@ module Tinky:ver<0.0.1>:auth<github:jonathanstowe> {
         }
 
         method apply-workflow(Workflow $wf) {
-            $!workflow = $wf;
-            if not $!state.defined and $!workflow.initial-state.defined {
-                $!state = $!workflow.initial-state;
+            if await $wf.validate-apply(self) {
+                $!workflow = $wf;
+                if not $!state.defined and $!workflow.initial-state.defined {
+                    $!state = $!workflow.initial-state;
+                }
+                self does $wf.role;
+                $wf.applied(self);;
             }
-            self does $wf.role;
-            $wf.applied(self);;
+            else {
+                X::ObjectRejected.new(workflow => $wf).throw;
+            }
         }
 
         multi method ACCEPTS(State:D $state) returns Bool {
