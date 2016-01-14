@@ -20,6 +20,26 @@ module Tinky {
     class Workflow   { ... };
     role Object      { ... };
 
+    # Traits for user defined state and transition classes
+    # The roles are only used to indicate the purpose of the
+    # methods for the time being.
+
+    role EnterValidator { }
+    multi sub trait_mod:<is> ( Method $m, :$enter-validator! ) is export {
+        $m does EnterValidator;
+    }
+
+    role LeaveValidator { }
+    multi sub trait_mod:<is> (Method $m, :$leave-validator! ) is export {
+        $m does LeaveValidator;
+    }
+
+    role TransitionValidator { }
+    multi sub trait_mod:<is> (Method $m, :$transition-validator! ) is export {
+        $m does TransitionValidator;
+    }
+
+
     subset ValidateCallback of Callable where { $_.signature.params && $_.signature ~~ :(Object --> Bool) };
 
     # This doesn't need any state and can be used by both Transition and State
@@ -129,14 +149,25 @@ module Tinky {
         method !validate-phase(Str $phase where 'enter'|'leave', Object $object) returns Promise {
             my @subs = do given $phase {
                 when 'leave' {
-                    @!leave-validators;
+                    (@!leave-validators, self!validate-methods($object, LeaveValidator)).flat;
                 }
                 when 'enter' {
-                    @!enter-validators;
+                    (@!enter-validators, self!validate-methods($object, EnterValidator)).flat;
                 }
             }
             validate-helper($object, @subs);
         }
+
+        method !validate-methods(Object $object, ::Phase) {
+            my @meths;
+            for self.^methods.grep(Phase) -> $meth {
+                if $object.WHAT ~~ $meth.signature.params[1].type  {
+                    @meths.push: $meth.assuming(self);
+                }
+            }
+            @meths;
+        }
+
 
         method leave-supply() {
             $!leave-supplier.Supply;
