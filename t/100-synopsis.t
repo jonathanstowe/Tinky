@@ -83,4 +83,6 @@ ok $seen-final, "Saw an event on the final supply";
 
 }, "synopsis code runs ok";
 
+done-testing;
+
 # vim: expandtab shiftwidth=4 ft=perl6
