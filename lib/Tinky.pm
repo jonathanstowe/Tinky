@@ -114,6 +114,169 @@ $ticket-a.reject;
 
 =head1 DESCRIPTION
 
+
+=head2 class Tinky::State 
+
+=head3 method enter
+
+        method enter(Object:D $object) 
+
+=head3 method validate-enter
+
+        method validate-enter(Object $object) returns Promise 
+
+=head3 method enter-supply
+
+        method enter-supply()  returns Supply
+
+=head3 method leave
+
+        method leave(Object:D $object) 
+
+=head3 method validate-leave
+
+        method validate-leave(Object $object) returns Promise 
+
+=head3 method leave-supply 
+
+        method leave-supply() returns Supply
+
+=head3 method Str
+
+        method Str() 
+
+=head3 method ACCEPTS
+
+        multi method ACCEPTS(State:D $state) returns Bool 
+        multi method ACCEPTS(Transition:D $transition) returns Bool 
+        multi method ACCEPTS(Object:D $object) returns Bool 
+
+=head2 class Tinky::Transition 
+
+=head3 method applied
+
+        method applied(Object:D $object) 
+
+=head3 method validate
+
+        method validate(Object:D $object) returns Promise 
+
+=head3 method  validate-apply
+
+        method validate-apply(Object:D $object) returns Promise 
+
+=head3 method supply
+
+        method supply() returns Supply 
+
+=head3 method Str
+
+        method Str() 
+
+=head3 method ACCEPTS
+
+        multi method ACCEPTS(State:D $state) returns Bool 
+        multi method ACCEPTS(Object:D $object) returns Bool 
+
+=head2 class Tinky::Workflow 
+
+=head3  method states
+
+        method states() 
+
+=head3 method transitions-for-state
+
+        method transitions-for-state(State:D $state ) returns Array[Transition]
+
+=head3 method find-transition
+
+        multi method find-transition(State:D $from, State:D $to) returns Transition
+
+=head3 method validate-spply
+
+        method validate-apply(Object:D $object) returns Promise 
+
+=head3 method applied
+
+        method applied(Object:D $object) 
+
+=head3 method applied-supply
+
+        method applied-supply() returns Supply 
+
+=head3 method enter-supply
+
+        method enter-supply() returns Supply 
+
+=head3 method final-supply
+
+        method final-supply() returns Supply 
+
+=head3 method leave-supply
+
+        method leave-supply() returns Supply 
+
+=head3 method transition-supply
+
+
+        method transition-supply() returns Supply 
+
+=head3
+        method role() 
+
+=head2 role Tinky::Object 
+
+=head3 method state
+
+        method state(Object:D $SELF:) is rw 
+
+=head3 method apply-workflow
+
+        method apply-workflow(Workflow $wf) 
+
+=head3 method apply-transition
+
+        method apply-transition(Transition $trans) returns State 
+
+=head3 method transitions
+
+        method transitions() returns Array[Transition]
+
+=head3 method next-states
+
+        method next-states() returns Array[State]
+
+=head3 method transition-for-state
+
+        method transition-for-state(State:D $to-state) returns State
+
+=head3 method ACCEPTS
+
+        multi method ACCEPTS(State:D $state) returns Bool 
+        multi method ACCEPTS(Transition:D $trans) returns Bool 
+
+=head2 EXCEPTIONS
+
+=head3 class Tinky::X::Fail is Exception 
+
+=head3 class Tinky::X::Workflow is X::Fail
+
+=head3 class Tinky::X::InvalidState is X::Workflow 
+
+=head3 class Tinky::X::InvalidTransition is X::Workflow 
+
+=head3 class Tinky::X::NoTransition is X::Fail 
+
+=head3 class Tinky::X::NoWorkflow is X::Fail 
+
+=head3 class Tinky::X::NoTransitions is X::Fail 
+
+=head3 class Tinky::X::TransitionRejected is X::Fail 
+
+=head3 class Tinky::X::ObjectRejected is X::Fail 
+
+=head3 class Tinky::X::NoState is X::Fail 
+
 =end pod
 
 module Tinky:ver<0.0.1>:auth<github:jonathanstowe> {
