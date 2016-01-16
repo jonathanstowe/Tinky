@@ -113,9 +113,9 @@ Tinky is a deterministic state manager that can be used to implement a
 workflow system, it provides a role ```Tinky::Object``` that allows an
 object to have a managed state.
 
-A ``Workflow``` is simply a set of ```State```s and allowable transitions
+A ```Workflow``` is simply a set of ```State```s and allowable transitions
 between them. Validators can be defined to check whether an object should
 be allowed to enter or leave a specific state or have a transition
 performed, asynchronous notification of state change (enter, leave or
 transition application,) is provided by Supplies which are available at
-```State```/```Transition`` level or aggregrated.
+```State```/```Transition``` level or aggregrated.

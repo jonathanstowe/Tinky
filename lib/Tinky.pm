@@ -112,8 +112,22 @@ $ticket-a.reject;
 
 =end code
 
+There may be further example code in the C<examples> directory in the
+distribution.
+
 =head1 DESCRIPTION
 
+Tinky is a deterministic state manager that can be used to implement a
+workflow system, it provides a c<role> L<Tinky::Object> that allows an
+object to have a managed state.
+
+A L<Workflow|Tinky::Workflow> is simply a set of L<State|Tinky::State>s
+and allowable transitions between them. Validators can be defined to check
+whether an object should be allowed to enter or leave a specific state or
+have a transition performed, asynchronous notification of state change
+(enter, leave or transition application,) is provided by Supplies which
+are available at L<State|Tinky::State>/L<Transition|Tinky::Transition>
+level or aggregrated at the Workflow level.
 
 =head2 class Tinky::State 
 
