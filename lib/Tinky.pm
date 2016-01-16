@@ -301,6 +301,12 @@ module Tinky:ver<0.0.1>:auth<github:jonathanstowe> {
     class Workflow   { ... };
     role Object      { ... };
 
+
+    # This is a handy type definition to save having to type
+    # this out all over the place so we can pretend a role
+    # is a type.
+    subset Role of Mu where { $_.HOW.archetypes.composable };
+
     # Traits for user defined state and transition classes
     # The roles are only used to indicate the purpose of the
     # methods for the time being.
@@ -602,8 +608,8 @@ module Tinky:ver<0.0.1>:auth<github:jonathanstowe> {
             return self.transitions-for-state($from).first({ $_.to ~~ $to }); 
         }
 
-        method role() {
-            if not ?$!role.HOW.archetypes.composable {
+        method role() returns Role {
+            if not $!role ~~ Role {
                 $!role = role { };
                 for @.transitions.classify(-> $t { $t.name }).kv -> $name, $transitions {
                     my $method = method (|c) {
