@@ -606,9 +606,9 @@ module Tinky:ver<0.0.1>:auth<github:jonathanstowe> {
             if not ?$!role.HOW.archetypes.composable {
                 $!role = role { };
                 for @.transitions.classify(-> $t { $t.name }).kv -> $name, $transitions {
-                    my $method = method () {
+                    my $method = method (|c) {
                         if $transitions.grep(self.state).first -> $tran {
-                            self.apply-transition($tran);
+                            self.apply-transition($tran, |c);
                         }
                         else {
                             X::InvalidTransition.new(message => "No transition '$name' for state '{ self.state.Str }'").throw;
@@ -701,7 +701,7 @@ module Tinky:ver<0.0.1>:auth<github:jonathanstowe> {
             $trans;
         }
 
-        method apply-transition(Transition $trans) returns State {
+        method apply-transition(Transition $trans,|c) returns State {
             if $!state.defined {
                 if self ~~ $trans {
                     if await $trans.validate-apply(self) {
