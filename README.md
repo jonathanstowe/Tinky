@@ -2,6 +2,8 @@
 
 An experimental workflow module for Perl 6
 
+[![Build Status](https://travis-ci.org/jonathanstowe/Tinky.svg?branch=master)](https://travis-ci.org/jonathanstowe/Tinky)
+
 ## Synopsis
 
 This is quite long [skip to the Description](#description) if you are impatient.
