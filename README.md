@@ -4,6 +4,8 @@ An experimental workflow module for Perl 6
 
 ## Synopsis
 
+This is quite long [skip to the Description](#Description) if you are impatient.
+
 ```
 use Tinky;
 
@@ -119,3 +121,57 @@ be allowed to enter or leave a specific state or have a transition
 performed, asynchronous notification of state change (enter, leave or
 transition application,) is provided by Supplies which are available at
 ```State```/```Transition``` level or aggregrated.
+
+I have taken somewhat of a "kitchen-sink" toolkit approach with this to
+provide a somewhat rich interface that can be more easily used to create
+higher level applications which interact nicely with Perl 6's reactive and
+composable nature. I've taken some ideas from similar software in other 
+languages that I have used and added features that I would have liked for
+the problems that I was solving and ended up providing myself.
+
+By the way I've deliberately chosen a "non-enterprisey" name for this for a 
+couple of reasons, largely however because I'm not convinced that this will
+remain the gold standard within the problem domain I don't want to block out
+a more sensible name for someone who may want to make something later, also
+the possible candidates involving some variant of "Workflow" or "state machine"
+don't properly fit what I see this as which is something that has some of the
+features of the latter in order to provide a toolkit to help implement the former.
+
+## Installation
+
+Assuming you have a working perl6 installation you should be able to
+install this with *ufo* :
+
+    ufo
+    make test
+    make install
+
+*ufo* can be installed with *panda* for rakudo:
+
+    panda install ufo
+
+Or you can install directly with "panda":
+
+    # From the source directory
+   
+    panda install .
+
+    # Remote installation
+
+    panda install Tinky
+
+Other install mechanisms may be become available in the future.
+
+## Support
+
+This is an experimental software but suggestions and patches that
+may make it more useful in your software are welcomed via github at
+
+   https://github.com/jonathanstowe/Tinky
+
+
+## Licence
+
+Please see the LICENCE file in the distribution
+
+(C) Jonathan Stowe 2016
