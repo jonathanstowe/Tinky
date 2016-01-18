@@ -4,7 +4,7 @@ An experimental workflow module for Perl 6
 
 ## Synopsis
 
-This is quite long [skip to the Description](#Description) if you are impatient.
+This is quite long [skip to the Description](#description) if you are impatient.
 
 ```
 use Tinky;
