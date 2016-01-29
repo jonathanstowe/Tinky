@@ -764,7 +764,16 @@ module Tinky:ver<0.0.2>:auth<github:jonathanstowe> {
             my @promises = do for @subs.grep( -> $v { c ~~ $v.signature  }) -> &callback {
                 start { callback(|c) };
             }
-            my $p1 = Promise.allof(@promises);
+            my $p1 = do {
+                if all(@promises>>.status) ~~ Kept {
+                    my $p = Promise.new;
+                    $p.keep: so all(@promises>>.result);
+                    $p;
+                }
+                else {
+                    Promise.allof(@promises);
+                }
+            }
             $p1.status ~~ Kept ?? $p1 !! $p1.then({ so all(@promises>>.result) });
         }
         run($object);
