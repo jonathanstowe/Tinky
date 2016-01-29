@@ -716,7 +716,7 @@ current state on the object.
 
 =end pod
 
-module Tinky:ver<0.0.1>:auth<github:jonathanstowe> {
+module Tinky:ver<0.0.2>:auth<github:jonathanstowe> {
 
     # Stub here, definition below
     class State      { ... };
