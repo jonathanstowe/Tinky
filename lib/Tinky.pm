@@ -948,14 +948,14 @@ module Tinky:ver<0.0.2>:auth<github:jonathanstowe> {
         method validate-apply(Object:D $object) returns Promise {
             my @promises = (self.validate($object), self.from.validate-leave($object), self.to.validate-enter($object));
             my $p1 = do {
-                            if all(@promises>>.status) ~~ Kept {
-                                my $p = Promise.new;
-                                $p.keep: so all(@promises>>.result);
-                                $p;
-                            }
-                            else {
-                                Promise.allof(@promises);
-                            }
+                if all(@promises>>.status) ~~ Kept {
+                    my $p = Promise.new;
+                    $p.keep: so all(@promises>>.result);
+                    $p;
+                }
+                else {
+                    Promise.allof(@promises);
+                }
             };
 
             $p1.status ~~ Kept ?? $p1 !! $p1.then({ so all(@promises>>.result)});
