@@ -140,6 +140,8 @@ of "Workflow" or "state machine" don't properly fit what I see this as
 which is something that has some of the features of the latter in order
 to provide a toolkit to help implement the former.
 
+The full documentation is available [here](Documentation.md).
+
 ## Installation
 
 Assuming you have a working perl6 installation you should be able to
