@@ -25,6 +25,6 @@
       "Jonathan Stowe <jns+git@gellyfish.co.uk>"
    ],
    "version" : "0.0.4",
-   "license" : "Artistic",
+   "license" : "Artistic-2.0",
    "description" : "An Experimental Workflow / State Management toolit"
 }
