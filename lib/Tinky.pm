@@ -381,7 +381,7 @@ Returns a plausible string representation of the transition.
 
 This is used to smart match the transition against either a
 L<Tinky::State> (returning True if the State matches the
-transition's C<from> state,) or a L<Tink::Object> (returning
+transition's C<from> state,) or a L<Tinky::Object> (returning
 True if the object's current state matches the transition's
 C<from> state.)
 
@@ -579,7 +579,7 @@ methods as for validation subroutines.
 =head2 role Tinky::Object
 
 This is a role that should should be applied to any application object
-that is to have a state managed by L<Tink::Workflow>, it provides the
+that is to have a state managed by L<Tinky::Workflow>, it provides the
 mechanisms for transition application and allows the transitions to
 be validated by the mechanisms described above for L<Tinky::State>
 and L<Tinky::Transition>
