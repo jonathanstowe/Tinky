@@ -1004,7 +1004,7 @@ module Tinky:ver<0.0.3>:auth<github:jonathanstowe> {
         has Supply $!enter-supply;
         multi method enter-supply() returns Supply {
             $!enter-supply //= do {
-                my @supplies = self.states.map(-> $state { $state.enter-supply.map(-> $value { $state, $value }) });
+                my @supplies = self.states.Seq.map(-> $state { $state.enter-supply.map(-> $value { $state, $value }) });
                 Supply.merge(@supplies);
             }
             $!enter-supply;
@@ -1034,7 +1034,7 @@ module Tinky:ver<0.0.3>:auth<github:jonathanstowe> {
         }
 
         multi method transitions-for-state(State:D $state ) {
-            @!transitions.grep($state);
+            self.transitions.grep($state);
         }
 
         # I'm half tempted to have this throw if there is more than one
