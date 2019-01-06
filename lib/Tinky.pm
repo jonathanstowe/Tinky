@@ -770,7 +770,7 @@ module Tinky:ver<0.0.3>:auth<github:jonathanstowe> {
 
     # This doesn't need any state and can be used by both Transition and State
     # The @subs isn't constrained but they should be ValidateCallbacks
-    my sub validate-helper(Object $object, @subs) returns Promise {
+    my sub validate-helper(Object $object, @subs --> Promise ) {
         my sub run(|c) {
             my @promises = do for @subs.grep( -> $v { c ~~ $v.signature  }) -> &callback {
                 start { callback(|c) };
@@ -860,40 +860,40 @@ module Tinky:ver<0.0.3>:auth<github:jonathanstowe> {
         has ValidateCallback @.enter-validators;
         has ValidateCallback @.leave-validators;
 
-        multi method ACCEPTS(State:D $state) returns Bool {
+        multi method ACCEPTS(State:D $state --> Bool ) {
             # naive approach for the time being
-            return self.name eq $state.name;
+            self.name eq $state.name;
         }
 
         # define in terms of above so only need to change once
-        multi method ACCEPTS(Transition:D $transition) returns Bool {
-            return self ~~ $transition.from;
+        multi method ACCEPTS(Transition:D $transition --> Bool ) {
+            self ~~ $transition.from;
         }
 
-        multi method ACCEPTS(Object:D $object) returns Bool {
-            return self ~~ $object.state;
+        multi method ACCEPTS(Object:D $object --> Bool ) {
+            self ~~ $object.state;
         }
 
         method Str() {
             $!name;
         }
 
-        method validate-enter(Object $object) returns Promise {
+        method validate-enter(Object $object --> Promise ) {
             self!validate-phase('enter', $object);
         }
 
-        method enter-supply() {
+        method enter-supply( --> Supply ) {
             $!enter-supplier.Supply;
         }
         method enter(Object:D $object) {
             $!enter-supplier.emit($object);
         }
 
-        method validate-leave(Object $object) returns Promise {
+        method validate-leave(Object $object --> Promise ) {
             self!validate-phase('leave', $object);
         }
 
-        method !validate-phase(Str $phase where 'enter'|'leave', Object $object) returns Promise {
+        method !validate-phase(Str $phase where 'enter'|'leave', Object $object --> Promise ) {
             my @subs = do given $phase {
                 when 'leave' {
                     (@!leave-validators, validate-methods(self, $object, LeaveValidator)).flat;
@@ -927,12 +927,12 @@ module Tinky:ver<0.0.3>:auth<github:jonathanstowe> {
         has ValidateCallback @.validators;
 
         # defined in terms of State so we only need to change once
-        multi method ACCEPTS(State:D $state) returns Bool {
-            return self.from ~~ $state;
+        multi method ACCEPTS(State:D $state --> Bool ) {
+            self.from ~~ $state;
         }
 
-        multi method ACCEPTS(Object:D $object) returns Bool {
-            return self.from ~~ $object.state;
+        multi method ACCEPTS(Object:D $object --> Bool ) {
+            self.from ~~ $object.state;
         }
 
         method applied(Object:D $object) {
@@ -942,16 +942,16 @@ module Tinky:ver<0.0.3>:auth<github:jonathanstowe> {
         }
 
         # This just calls the validators for the Transition
-        method validate(Object:D $object) returns Promise {
+        method validate(Object:D $object --> Promise ) {
             validate-helper($object, ( @!validators, validate-methods(self, $object, TransitionValidator)).flat);
         }
 
-        method validate-apply(Object:D $object) returns Promise {
+        method validate-apply(Object:D $object --> Promise ) {
             my @promises = (self.validate($object), self.from.validate-leave($object), self.to.validate-enter($object));
             Promise.allof(@promises).then( { so all(@promises.map(-> $p { $p.result })) });
         }
 
-        method supply() returns Supply {
+        method supply( --> Supply ) {
             $!supplier.Supply;
         }
 
@@ -973,7 +973,7 @@ module Tinky:ver<0.0.3>:auth<github:jonathanstowe> {
 
         has ValidateCallback @.validators;
 
-        method validate-apply(Object:D $object) returns Promise {
+        method validate-apply(Object:D $object --> Promise ) {
             validate-helper($object, ( @!validators, validate-methods(self, $object, ApplyValidator)).flat);
         }
 
@@ -997,12 +997,12 @@ module Tinky:ver<0.0.3>:auth<github:jonathanstowe> {
             $!applied-supplier.emit($object);
         }
 
-        method applied-supply() returns Supply {
+        method applied-supply( --> Supply ) {
             $!applied-supplier.Supply;
         }
 
         has Supply $!enter-supply;
-        multi method enter-supply() returns Supply {
+        multi method enter-supply( --> Supply ) {
             $!enter-supply //= do {
                 my @supplies = self.states.Seq.map(-> $state { $state.enter-supply.map(-> $value { $state, $value }) });
                 Supply.merge(@supplies);
@@ -1011,12 +1011,12 @@ module Tinky:ver<0.0.3>:auth<github:jonathanstowe> {
         }
 
         has Supply $!final-supply;
-        multi method final-supply() returns Supply {
+        multi method final-supply( --> Supply ) {
             $!final-supply //= self.enter-supply.grep( -> $ ($state, $object) { !?self.transitions-for-state($state) } );
         }
 
         has Supply $!leave-supply;
-        multi method leave-supply() returns Supply {
+        multi method leave-supply( --> Supply )  {
             $!leave-supply //= do {
                 my @supplies = self.states.map(-> $state { $state.leave-supply.map(-> $value { $state, $value }) });
                 Supply.merge(@supplies);
@@ -1025,7 +1025,7 @@ module Tinky:ver<0.0.3>:auth<github:jonathanstowe> {
         }
 
         has Supply $!transition-supply;
-        method transition-supply() returns Supply {
+        method transition-supply( --> Supply ) {
             $!transition-supply //= do {
                 my @supplies = self.transitions.Seq.map( -> $transition { $transition.supply.map(-> $value { $transition, $value }) });
                 Supply.merge(@supplies);
@@ -1039,15 +1039,15 @@ module Tinky:ver<0.0.3>:auth<github:jonathanstowe> {
 
         # I'm half tempted to have this throw if there is more than one
         multi method find-transition(State:D $from, State:D $to) {
-            return self.transitions-for-state($from).first({ $_.to ~~ $to });
+            self.transitions-for-state($from).first({ $_.to ~~ $to });
         }
 
-        method role() returns Role {
+        method role( --> Role ) {
             if not $!role ~~ Role {
                 $!role = role { };
                 for @.transitions.classify(-> $t { $t.name }).kv -> $name, $transitions {
                     my $method = method (|c) {
-                        if $transitions.grep(self.state).first -> $tran {
+                        if $transitions.grep(self.state).head -> $tran {
                             self.apply-transition($tran, |c);
                         }
                         else {
@@ -1066,7 +1066,7 @@ module Tinky:ver<0.0.3>:auth<github:jonathanstowe> {
 
         has State $.state;
 
-        method !state() is rw returns State {
+        method !state( --> State ) is rw {
             $!state;
         }
 
@@ -1107,12 +1107,12 @@ module Tinky:ver<0.0.3>:auth<github:jonathanstowe> {
             }
         }
 
-        multi method ACCEPTS(State:D $state) returns Bool {
-            return $!state ~~ $state;
+        multi method ACCEPTS(State:D $state --> Bool ) {
+            $!state ~~ $state;
         }
 
-        multi method ACCEPTS(Transition:D $trans) returns Bool {
-            return $!state ~~ $trans;
+        multi method ACCEPTS(Transition:D $trans --> Bool ) {
+            $!state ~~ $trans;
         }
 
         method transitions() {
@@ -1142,7 +1142,7 @@ module Tinky:ver<0.0.3>:auth<github:jonathanstowe> {
             $trans;
         }
 
-        method apply-transition(Transition $trans,|c) returns State {
+        method apply-transition(Transition $trans,|c --> State ) {
             if $!state.defined {
                 if self ~~ $trans {
                     if await $trans.validate-apply(self) {
