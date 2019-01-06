@@ -1004,7 +1004,7 @@ module Tinky:ver<0.0.3>:auth<github:jonathanstowe> {
         has Supply $!enter-supply;
         multi method enter-supply() returns Supply {
             $!enter-supply //= do {
-                my @supplies = self.states.map(-> $state { $state.enter-supply.map(-> $value { $state, $value }) });
+                my @supplies = self.states.Seq.map(-> $state { $state.enter-supply.map(-> $value { $state, $value }) });
                 Supply.merge(@supplies);
             }
             $!enter-supply;
@@ -1027,7 +1027,7 @@ module Tinky:ver<0.0.3>:auth<github:jonathanstowe> {
         has Supply $!transition-supply;
         method transition-supply() returns Supply {
             $!transition-supply //= do {
-                my @supplies = self.transitions.map( -> $transition { $transition.supply.map(-> $value { $transition, $value }) });
+                my @supplies = self.transitions.Seq.map( -> $transition { $transition.supply.map(-> $value { $transition, $value }) });
                 Supply.merge(@supplies);
             }
             $!transition-supply;
@@ -1127,7 +1127,7 @@ module Tinky:ver<0.0.3>:auth<github:jonathanstowe> {
         }
 
         method next-states() {
-            my @states = self.transitions.map(-> $t { $t.to });
+            my @states = self.transitions.map( *.to );
             @states;
         }
 
