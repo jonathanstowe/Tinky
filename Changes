@@ -1,3 +1,7 @@
+v0.0.7		Tue 29 Jan 19:20:46 GMT 2019
+    * Spring clean and upload to CPAN
+	* Support for sub-classes where some attributes aren't real lists
+	* Standardize returns/return usage
 v0.0.6      Mon 26 Nov 13:46:24 GMT 2018
     * Fully qualify exception classes
 v0.0.5		Sat Apr 29 16:15:36 2017 +0100 
