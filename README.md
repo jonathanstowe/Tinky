@@ -2,7 +2,7 @@
 
 An experimental workflow module for Raku
 
-[![Build Status](https://travis-ci.org/jonathanstowe/Tinky.svg?branch=master)](https://travis-ci.org/jonathanstowe/Tinky)
+![Build Status](https://github.com/jonathanstowe/Tinky/workflows/CI/badge.svg)
 
 ## Synopsis
 
