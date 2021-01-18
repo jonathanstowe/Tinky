@@ -1,4 +1,4 @@
-#!perl6
+#!/usr/bin/env raku
 
 use v6;
 
@@ -32,4 +32,4 @@ ok @transitions[0] ~~ $obj, "transition matches object";
 
 
 done-testing;
-# vim: expandtab shiftwidth=4 ft=perl6
+# vim: expandtab shiftwidth=4 ft=raku

@@ -1,3 +1,6 @@
+v0.1.0		Mon 18 Jan 10:15:01 GMT 2021
+	* Light renaming
+	* Move CI to github actions
 v0.0.8		Wed 13 Mar 21:24:52 GMT 2019
 	*	Small change to support Tinky::DB
 v0.0.7		Tue 29 Jan 19:20:46 GMT 2019

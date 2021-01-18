@@ -36,7 +36,7 @@ SYNOPSIS
 
     my $open              = Tinky::Transition.new(name => 'open', from => $state-new, to => $state-open);
 
-    # Where  more than one transition has the same name, the transition which matches the object's 
+    # Where  more than one transition has the same name, the transition which matches the object's
     # current state will be use.
     my $reject-new        = Tinky::Transition.new(name => 'reject', from => $state-new, to => $state-rejected);
     my $reject-open       = Tinky::Transition.new(name => 'reject', from => $state-open, to => $state-rejected);
@@ -64,7 +64,7 @@ SYNOPSIS
     my $workflow = Tinky::Workflow.new(:@transitions, name => 'ticket-workflow', initial-state => $state-new );
 
     # The workflow aggregates the Supplies of the transitions and the states.
-    # This could be to a logging subsystem for instance. 
+    # This could be to a logging subsystem for instance.
 
     $workflow.transition-supply.act(-> ($trans, $object) { say "Ticket '{ $object.ticket-number }' went from { $trans.from.name }' to '{ $trans.to.name }'" });
 
@@ -126,8 +126,8 @@ All those subroutines that would accept the supplied Tinky::Object will be calle
 
 A similar mechanism is used for method callbacks.
 
-class Tinky::State 
--------------------
+class Tinky::State
+------------------
 
 The [Tinky::State](Tinky::State) is the managed state that is applied to an object, it provides a mechanism for validating whether on object should enter or leave a particular state and supplies that emit objects that have entered or left a given state.
 
@@ -143,7 +143,7 @@ The constructor must be supplied with a `name` named parameter which must be uni
 
     method enter(Object:D $object)
 
-This is called with the [Tinky::Object](Tinky::Object) instance when the state has been entered by the object, the default implementation arranges for the object to be emitted on the `enter-supply`, so if it is over-ridden in a  sub-class it should nonetheless call the base implementation with `nextsame` in order to provide the object to the supply. It would probably be better however to simply tap the [enter-supply](enter-supply).
+This is called with the [Tinky::Object](Tinky::Object) instance when the state has been entered by the object, the default implementation arranges for the object to be emitted on the `enter-supply`, so if it is over-ridden in a sub-class it should nonetheless call the base implementation with `nextsame` in order to provide the object to the supply. It would probably be better however to simply tap the [enter-supply](enter-supply).
 
 ### method validate-enter
 
@@ -161,7 +161,7 @@ This returns a [Supply](Supply) to which is emitted each object that has success
 
     method leave(Object:D $object)
 
-This is called when an object leaves this state, with the object instance as the argument. Like <enter> the default implementation provides for the object to emitted on the `leave-supply` so  any over-ride implementation should arrange to call this base method. Typically it would be preferred to tap the `leave-supply` if some action is required on leaving a state.
+This is called when an object leaves this state, with the object instance as the argument. Like <enter> the default implementation provides for the object to emitted on the `leave-supply` so any over-ride implementation should arrange to call this base method. Typically it would be preferred to tap the `leave-supply` if some action is required on leaving a state.
 
 ### method validate-leave
 
@@ -169,7 +169,7 @@ This is called when an object leaves this state, with the object instance as the
 
 This is called prior to the transition being actually performed and returns a [Promise](Promise) that will be kept with [True](True) if all of the leave validators return True, or False otherwise. It can be over-ridden in a sub-class if some other validation mechanism to the callbacks is required, but **must** return a [Promise](Promise)
 
-### method leave-supply 
+### method leave-supply
 
     method leave-supply() returns Supply
 
@@ -183,8 +183,8 @@ This returns a sensible string representation of the State,
 
 ### method ACCEPTS
 
-    multi method ACCEPTS(State:D $state) returns Bool 
-    multi method ACCEPTS(Transition:D $transition) returns Bool 
+    multi method ACCEPTS(State:D $state) returns Bool
+    multi method ACCEPTS(Transition:D $transition) returns Bool
     multi method ACCEPTS(Object:D $object) returns Bool
 
 This provides for smart-matching against another [State](State) ( returning true if they evaluate to the same state,) a [Transition](Transition) ( returning True if the `from` State of the transition is the same as this state,) or a [Tinky::Object](Tinky::Object) ( returnning True if the Object is at the State.)
@@ -215,8 +215,8 @@ Alternatively a sub-class can define validator methods with the `leave-validator
 
 This may be useful if you have fixed states and wish to substitute runtime complexity.
 
-class Tinky::Transition 
-------------------------
+class Tinky::Transition
+-----------------------
 
 A transition is the configured change between two pre-determined states, Only changes described by a transition are allowed to be performed. The transaction class provides for validators that can indicate whether the transition should be applied to an object (distinct from the enter or leave state validators,) and provides a separate supply that emits the object whenever the transition is succesfully applied to an object's state. This higher level of granularity may simplify application logic when in some circumstances than taking both from state and to state individually.
 
@@ -224,7 +224,7 @@ A transition is the configured change between two pre-determined states, Only ch
 
     method new(Tinky::Transition:U: Str :$!name!, Tinky::State $!from!, Tinky::State $!to!, :@!validators)
 
-The constructor of the class, The `name` parameter must be supplied, it need not be unique but will be used to create a helper method that will be applied to the target Object when the workflow is applied so should be a valid Perl 6 identifier. The mechanism for creating these methods is decribed under [Tinky::Workflow](Tinky::Workflow).
+The constructor of the class, The `name` parameter must be supplied, it need not be unique but will be used to create a helper method that will be applied to the target Object when the workflow is applied so should be a valid Raku identifier. The mechanism for creating these methods is decribed under [Tinky::Workflow](Tinky::Workflow).
 
 The `from` and `to` states must be supplied, A transition can only be supplied to an object that has a current state that matches `from`.
 
@@ -248,7 +248,7 @@ This can be over-ridden in a sub-class if some other validation mechanism is to 
 
     method validate-apply(Object:D $object) returns Promise
 
-This is the top-level method that is used to check whether a  transition should be applied, it returns a Promise that will be kept with True if all of the promises returned by the transition's `validate`, the `from` state's `leave-validate` and the `to` state's `enter-validate` are kept with True.
+This is the top-level method that is used to check whether a transition should be applied, it returns a Promise that will be kept with True if all of the promises returned by the transition's `validate`, the `from` state's `leave-validate` and the `to` state's `enter-validate` are kept with True.
 
 It is unlikely that this would need to over-ridden but any sub-class implementation must return a Promise that will be kept with a Bool.
 
@@ -268,10 +268,10 @@ Returns a plausible string representation of the transition.
 
 ### method ACCEPTS
 
-    multi method ACCEPTS(State:D $state) returns Bool 
+    multi method ACCEPTS(State:D $state) returns Bool
     multi method ACCEPTS(Object:D $object) returns Bool
 
-This is used to smart match the transition against either a [Tinky::State](Tinky::State) (returning True if the State matches the transition's `from` state,) or a [Tink::Object](Tink::Object) (returning True if the object's current state matches the transition's `from` state.)
+This is used to smart match the transition against either a [Tinky::State](Tinky::State) (returning True if the State matches the transition's `from` state,) or a [Tinky::Object](Tinky::Object) (returning True if the object's current state matches the transition's `from` state.)
 
 ### attribute validators
 
@@ -285,10 +285,10 @@ Alternatively validators can be supplied as methods with the `transition-validat
 
 The same rules for execution based on the signature and the object to which the transition is being applied are true for methods as for validation subroutines.
 
-class Tinky::Workflow 
-----------------------
+class Tinky::Workflow
+---------------------
 
-The [Tinky::Workflow](Tinky::Workflow) class brings together a collection of transitions together and provides additional functionality to objects that consume the workflow as well as aggregating  the various [Supply](Supply)s that are provided by State and Transition.
+The [Tinky::Workflow](Tinky::Workflow) class brings together a collection of transitions together and provides additional functionality to objects that consume the workflow as well as aggregating the various [Supply](Supply)s that are provided by State and Transition.
 
 Whilst it is possible that standalone transitions can be applied to any object that does the [Tinky::Object](Tinky::Object) role, certain functionality is not available if workflow is not known.
 
@@ -390,10 +390,10 @@ Alternatively validators can be supplied as methods with the `apply-validator` t
 
 The same rules for execution based on the signature and the object to which the transition is being applied are true for methods as for validation subroutines.
 
-role Tinky::Object 
--------------------
+role Tinky::Object
+------------------
 
-This is a role that should should be applied to any application object that is to have a state managed by [Tink::Workflow](Tink::Workflow), it provides the mechanisms for transition application and allows the transitions to be validated by the mechanisms described above for [Tinky::State](Tinky::State) and [Tinky::Transition](Tinky::Transition)
+This is a role that should should be applied to any application object that is to have a state managed by [Tinky::Workflow](Tinky::Workflow), it provides the mechanisms for transition application and allows the transitions to be validated by the mechanisms described above for [Tinky::State](Tinky::State) and [Tinky::Transition](Tinky::Transition)
 
 ### method state
 
@@ -435,7 +435,7 @@ This returns the transition that would place the object in the supplied state fr
 
 ### method ACCEPTS
 
-    multi method ACCEPTS(State:D $state) returns Bool 
+    multi method ACCEPTS(State:D $state) returns Bool
     multi method ACCEPTS(Transition:D $trans) returns Bool
 
 Used to smart match the object against either a State (returns True if the state matches the current state of the object,) or a Transition (returns True if the `from` state matches the current state of the object.)
@@ -443,11 +443,11 @@ Used to smart match the object against either a State (returns True if the state
 EXCEPTIONS
 ----------
 
-The methods for applying a transition to an object will signal an  inability to apply the transition by means of an exception.
+The methods for applying a transition to an object will signal an inability to apply the transition by means of an exception.
 
 The below documents the location where the exceptions are thrown directly, of course they may be the result of some higher level method.
 
-### class Tinky::X::Fail is Exception 
+### class Tinky::X::Fail is Exception
 
 This is used as a base class for all of the exceptions thrown by Tinky, it will never be thrown itself.
 
@@ -455,32 +455,33 @@ This is used as a base class for all of the exceptions thrown by Tinky, it will 
 
 This is an additional sub-class of [Tinky::X::Fail](Tinky::X::Fail) that is used by some of the other exceptions.
 
-### class Tinky::X::InvalidState is Tinky::X::Workflow 
+### class Tinky::X::InvalidState is Tinky::X::Workflow
 
-### class Tinky::X::InvalidTransition is Tinky::X::Workflow 
+### class Tinky::X::InvalidTransition is Tinky::X::Workflow
 
 This will be thrown by the helper methods provided by the application of the workflow if the current state of the object does match the `from` state of any of the applicable transitions. It will also be thrown by `apply-transition` if the `from` state of the transition supplied doesn't match the current state of the object.
 
-### class Tinky::X::NoTransition is Tinky::X::Fail 
+### class Tinky::X::NoTransition is Tinky::X::Fail
 
 This will be thrown when attempting to set the state of the object by assignment when there is no transition that goes from the object's current state to the supplied state.
 
-### class Tinky::X::NoWorkflow is Tinky::X::Fail 
+### class Tinky::X::NoWorkflow is Tinky::X::Fail
 
 This is thrown by `transitions` and `transitions-for-state` on the [Tinky::Object](Tinky::Object) if they are called when no workflow has yet been applied to the object.
 
-### class Tinky::X::NoTransitions is Tinky::X::Fail 
+### class Tinky::X::NoTransitions is Tinky::X::Fail
 
 This is thrown by the [Workflow](Workflow) `states` method if it is called and there are no transitions defined.
 
-### class Tinky::X::TransitionRejected is Tinky::X::Fail 
+### class Tinky::X::TransitionRejected is Tinky::X::Fail
 
 This is thrown by `apply-transition` when the transition validation resulted in a False value, because the transition, leave state or enter state validators returned false.
 
-### class Tinky::X::ObjectRejected is Tinky::X::Fail 
+### class Tinky::X::ObjectRejected is Tinky::X::Fail
 
 This is thrown on `apply-workflow` if one or more of the workflow's apply validators returned false.
 
-### class Tinky::X::NoState is Tinky::X::Fail 
+### class Tinky::X::NoState is Tinky::X::Fail
 
 This will be thrown by apply-transition if there is no current state on the object.
+

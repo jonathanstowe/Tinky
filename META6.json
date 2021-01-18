@@ -1,6 +1,6 @@
 {
   "name": "Tinky",
-  "version": "0.0.8",
+  "version": "0.1.0",
   "auth": "github:jonathanstowe",
   "api": "1.0",
   "description": "An Experimental Workflow / State Management toolit",
@@ -11,6 +11,7 @@
     "bugtracker": "https://github.com/jonathanstowe/Tinky/issues"
   },
   "perl": "6.*",
+  "raku": "6.*",
   "resources": [ ],
   "build-depends": [ ],
   "depends": [ ],
@@ -29,5 +30,5 @@
   "authors": [
     "Jonathan Stowe <jns+git@gellyfish.co.uk>"
   ],
-  "meta-version": "0"
+  "meta-version": "1"
 }

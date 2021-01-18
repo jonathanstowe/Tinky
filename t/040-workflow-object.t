@@ -1,4 +1,4 @@
-#!perl6
+#!/usr/bin/env raku
 
 use v6;
 
@@ -76,4 +76,4 @@ subtest {
 }, "initial state on Workflow";
 
 done-testing;
-# vim: expandtab shiftwidth=4 ft=perl6
+# vim: expandtab shiftwidth=4 ft=raku

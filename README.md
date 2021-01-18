@@ -1,6 +1,6 @@
 # Tinky
 
-An experimental workflow module for Perl 6
+An experimental workflow module for Raku
 
 [![Build Status](https://travis-ci.org/jonathanstowe/Tinky.svg?branch=master)](https://travis-ci.org/jonathanstowe/Tinky)
 
@@ -9,6 +9,7 @@ An experimental workflow module for Perl 6
 This is quite long [skip to the Description](#description) if you are impatient.
 
 ```perl6
+
 use Tinky;
 
 
@@ -126,7 +127,7 @@ transition application,) is provided by Supplies which are available at
 
 I have taken somewhat of a "kitchen-sink" toolkit approach with this to
 provide a somewhat rich interface that can be more easily used to create
-higher level applications which interact nicely with Perl 6's reactive
+higher level applications which interact nicely with Raku's reactive
 and composable nature. I've taken some ideas from similar software in
 other languages that I have used and added features that I would have
 liked for the problems that I was solving and ended up providing myself.
@@ -144,8 +145,7 @@ The full documentation is available [here](Documentation.md).
 
 ## Installation
 
-Assuming you have a working perl6 installation you should be able to
-install this with *zef* :
+Assuming you have a working Rakudo installation you should be able to install this with *zef* :
 
     # From the source directory
    
@@ -169,4 +169,4 @@ This is free software.
 
 Please see the [LICENCE](LICENCE) file in the distribution.
 
-© Jonathan Stowe 2016 - 2019
+© Jonathan Stowe 2016 - 2021

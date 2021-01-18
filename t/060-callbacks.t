@@ -1,4 +1,4 @@
-#!perl6
+#!/usr/bin/env raku
 
 use v6;
 
@@ -190,4 +190,4 @@ lives-ok { WorkflowGood.new.apply-workflow($apply-wf-meths) }, "Workflow.apply-w
 
 
 done-testing;
-# vim: expandtab shiftwidth=4 ft=perl6
+# vim: expandtab shiftwidth=4 ft=raku

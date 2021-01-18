@@ -308,7 +308,7 @@ from state and to state individually.
 The constructor of the class,  The C<name> parameter must be supplied,
 it need not be unique but will be used to create a helper method that
 will be applied to the target Object when the workflow is applied so
-should be a valid Perl 6 identifier.  The mechanism for creating these
+should be a valid Raku identifier.  The mechanism for creating these
 methods is decribed under L<Tinky::Workflow>.
 
 The C<from> and C<to> states must be supplied,  A transition can only
@@ -727,7 +727,7 @@ current state on the object.
 
 =end pod
 
-module Tinky:ver<0.0.8>:auth<github:jonathanstowe>:api<1.0> {
+module Tinky:ver<0.1.0>:auth<github:jonathanstowe>:api<1.0> {
 
     # Stub here, definition below
     class State      { ... };
@@ -1170,4 +1170,4 @@ module Tinky:ver<0.0.8>:auth<github:jonathanstowe>:api<1.0> {
         }
     }
 }
-# vim: expandtab shiftwidth=4 ft=perl6
+# vim: expandtab shiftwidth=4 ft=raku

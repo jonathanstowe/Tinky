@@ -1,4 +1,4 @@
-#!perl6
+#!/usr/bin/env raku
 
 use v6;
 
@@ -27,4 +27,4 @@ $obj = FooTest.new;
 throws-like {  $obj.apply-transition(@transitions[0]) }, Tinky::X::NoState, "should throw X::NoState with apply-transition and state not set";
 
 done-testing;
-# vim: expandtab shiftwidth=4 ft=perl6
+# vim: expandtab shiftwidth=4 ft=raku

@@ -1,4 +1,4 @@
-#!perl6
+#!/usr/bin/env raku
 
 use Test;
 
@@ -85,4 +85,4 @@ ok $seen-final, "Saw an event on the final supply";
 
 done-testing;
 
-# vim: expandtab shiftwidth=4 ft=perl6
+# vim: expandtab shiftwidth=4 ft=raku
