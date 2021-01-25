@@ -727,7 +727,7 @@ current state on the object.
 
 =end pod
 
-module Tinky:ver<0.1.0>:auth<github:jonathanstowe>:api<1.0> {
+module Tinky:ver<0.1.1>:auth<github:jonathanstowe>:api<1.0> {
 
     # Stub here, definition below
     class State      { ... };
@@ -745,22 +745,22 @@ module Tinky:ver<0.1.0>:auth<github:jonathanstowe>:api<1.0> {
     # The roles are only used to indicate the purpose of the
     # methods for the time being.
 
-    my role EnterValidator { }
+    role EnterValidator is export(:helpers)  { }
     multi sub trait_mod:<is> ( Method $m, :$enter-validator! ) is export {
         $m does EnterValidator;
     }
 
-    my role LeaveValidator { }
+    role LeaveValidator is export(:helpers)  { }
     multi sub trait_mod:<is> (Method $m, :$leave-validator! ) is export {
         $m does LeaveValidator;
     }
 
-    my role TransitionValidator { }
+    role TransitionValidator is export(:helpers)  { }
     multi sub trait_mod:<is> (Method $m, :$transition-validator! ) is export {
         $m does TransitionValidator;
     }
 
-    my role ApplyValidator { }
+    role ApplyValidator is export(:helpers)  { }
     multi sub trait_mod:<is> (Method $m, :$apply-validator! ) is export {
         $m does ApplyValidator;
     }
@@ -770,7 +770,7 @@ module Tinky:ver<0.1.0>:auth<github:jonathanstowe>:api<1.0> {
 
     # This doesn't need any state and can be used by both Transition and State
     # The @subs isn't constrained but they should be ValidateCallbacks
-    my sub validate-helper(Object $object, @subs --> Promise ) {
+    sub validate-helper(Object $object, @subs --> Promise ) is export(:helpers) {
         my sub run(|c) {
             my @promises = do for @subs.grep( -> $v { c ~~ $v.signature  }) -> &callback {
                 start { callback(|c) };
@@ -783,7 +783,7 @@ module Tinky:ver<0.1.0>:auth<github:jonathanstowe>:api<1.0> {
     # find the methods in the supplied object, that would
     # accept the Object as an argument and then wrap them
     # as subs with the object to pass to the above
-    my sub validate-methods(Mu:D $self, Object $object, ::Phase) {
+    sub validate-methods(Mu:D $self, Object $object, ::Phase) is export(:helpers) {
         my @meths;
         for $self.^methods.grep(Phase) -> $meth {
             if $object.WHAT ~~ $meth.signature.params[1].type  {
@@ -879,7 +879,7 @@ module Tinky:ver<0.1.0>:auth<github:jonathanstowe>:api<1.0> {
         }
 
         method validate-enter(Object $object --> Promise ) {
-            self!validate-phase('enter', $object);
+            self.validate-phase('enter', $object);
         }
 
         method enter-supply( --> Supply ) {
@@ -890,10 +890,10 @@ module Tinky:ver<0.1.0>:auth<github:jonathanstowe>:api<1.0> {
         }
 
         method validate-leave(Object $object --> Promise ) {
-            self!validate-phase('leave', $object);
+            self.validate-phase('leave', $object);
         }
 
-        method !validate-phase(Str $phase where 'enter'|'leave', Object $object --> Promise ) {
+        method validate-phase(Str $phase where 'enter'|'leave', Object $object --> Promise ) {
             my @subs = do given $phase {
                 when 'leave' {
                     (@!leave-validators, validate-methods(self, $object, LeaveValidator)).flat;
