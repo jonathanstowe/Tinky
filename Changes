@@ -1,3 +1,6 @@
+v0.1.2		Mon 19 Apr 14:44:33 BST 2021
+	* Add some lifecycle callbacks to the object for the convenience of sub-classes
+	* Fix the application of the role
 v0.1.1		Mon 25 Jan 13:06:26 GMT 2021
 	* Some changes to make it easier for sub-classes
 v0.1.0		Mon 18 Jan 10:15:01 GMT 2021

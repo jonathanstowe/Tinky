@@ -8,7 +8,7 @@ An experimental workflow module for Raku
 
 This is quite long [skip to the Description](#description) if you are impatient.
 
-```perl6
+```raku
 
 use Tinky;
 

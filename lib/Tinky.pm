@@ -582,7 +582,11 @@ This is a role that should should be applied to any application object
 that is to have a state managed by L<Tinky::Workflow>, it provides the
 mechanisms for transition application and allows the transitions to
 be validated by the mechanisms described above for L<Tinky::State>
-and L<Tinky::Transition>
+and L<Tinky::Transition>.
+
+There are also method traits to define methods that will be called before
+and after the application of the workflow to the object, and before and
+after the application of a transition to the object.
 
 =head3 method state
 
@@ -662,6 +666,47 @@ the state matches the current state of the object,) or a Transition
 (returns True if the C<from> state matches the current state of the
 object.)
 
+=head3 trait before-apply-workflow
+
+This trait can be applied to a method that will be called within the
+C<apply-workflow> immediately after the application has been validated
+and before anything else occurs (primarily the setting of an initial
+state state if any.)  The method will be called with the Workflow
+object as an argument.
+
+This is primarily for the benefit of implementations that may want
+to, for instance, retrieve the object state from some storage before
+setting up the rest of the workflow.
+
+=head3 trait after-apply-workflow
+
+This trait can be applied to a method that will be called within the
+C<apply-workflow> immediately before the Workflow's C<applied> method
+is called with the object, that is the initial state will have been
+set and other changes made.  The method will be called with the Workflow
+object as an argument.
+
+This may be helpful, for example, if one wanted to persist the initial
+state to some storage.
+
+=head3 trait before-apply-transition
+
+This trait can be applied to a method that will be called within the
+C<apply-transition> immediately after the validation has been done and
+before the state is actually changed.  The method will be called with
+the Transition object as the argument.
+
+=head3 trait after-apply-transition
+
+This trait can be applied to a method that will be called within the
+C<apply-transition> after the state of the object has been changed and
+immediately before the object is passed to the transition's C<applied>
+method.  The method will be called with the Transition object as the
+argument.
+
+This might be used, for example, to persist the change of state of the
+object to some storage.
+
 =head2 EXCEPTIONS
 
 The methods for applying a transition to an object will signal an
@@ -727,7 +772,7 @@ current state on the object.
 
 =end pod
 
-module Tinky:ver<0.1.1>:auth<github:jonathanstowe>:api<1.0> {
+module Tinky:ver<0.1.2>:auth<github:jonathanstowe>:api<1.0> {
 
     # Stub here, definition below
     class State      { ... };
@@ -739,7 +784,7 @@ module Tinky:ver<0.1.1>:auth<github:jonathanstowe>:api<1.0> {
     # This is a handy type definition to save having to type
     # this out all over the place so we can pretend a role
     # is a type.
-    subset Role of Mu where { $_.HOW.archetypes.composable };
+    subset Role of Mu where { $_.DEFINITE && $_.HOW.archetypes.composable };
 
     # Traits for user defined state and transition classes
     # The roles are only used to indicate the purpose of the
@@ -791,6 +836,42 @@ module Tinky:ver<0.1.1>:auth<github:jonathanstowe>:api<1.0> {
             }
         }
         @meths;
+    }
+
+    # This is a base role for the Object apply-workflow callbacks
+    role ObjectWorkflowPhase {
+    }
+
+    # indicate the 'before-apply-workflow' callbacks for a Tinky::Object
+    role ObjectWorkflowBefore does ObjectWorkflowPhase {
+    }
+    multi sub trait_mod:<is> (Method $m, :$before-apply-workflow! ) is export {
+        $m does ObjectWorkflowBefore;
+    }
+
+    # indicate the 'after-apply-workflow' callbacks for a Tinky::Object
+    role ObjectWorkflowAfter does ObjectWorkflowPhase {
+    }
+    multi sub trait_mod:<is> (Method $m, :$after-apply-workflow! ) is export {
+        $m does ObjectWorkflowAfter;
+    }
+
+    # This is a base role for the Object apply-transition callbacks
+    role ObjectTransitionPhase {
+    }
+
+    # indicate the 'before-apply-transition' callbacks for a Tinky::Object
+    role ObjectTransitionBefore does ObjectTransitionPhase {
+    }
+    multi sub trait_mod:<is> (Method $m, :$before-apply-transition! ) is export {
+        $m does ObjectTransitionBefore;
+    }
+
+    # indicate the 'after-apply-transition' callbacks for a Tinky::Object
+    role ObjectTransitionAfter does ObjectTransitionPhase {
+    }
+    multi sub trait_mod:<is> (Method $m, :$after-apply-transition! ) is export {
+        $m does ObjectTransitionAfter;
     }
 
     class Tinky::X::Fail is Exception {
@@ -977,7 +1058,7 @@ module Tinky:ver<0.1.1>:auth<github:jonathanstowe>:api<1.0> {
             validate-helper($object, ( @!validators, validate-methods(self, $object, ApplyValidator)).flat);
         }
 
-        has $!role;
+        has Mu $.role;
 
         method states() {
             if not @!states.elems {
@@ -1042,9 +1123,9 @@ module Tinky:ver<0.1.1>:auth<github:jonathanstowe>:api<1.0> {
             self.transitions-for-state($from).first({ $_.to ~~ $to });
         }
 
-        method role( --> Role ) {
+        method role( --> Mu ) {
             if not $!role ~~ Role {
-                $!role = role { };
+                $!role := Metamodel::ParametricRoleHOW.new_type(name => self.^name ~ '::' ~ ( self.name // 'role' ) );
                 for @.transitions.classify(-> $t { $t.name }).kv -> $name, $transitions {
                     my $method = method (|c) {
                         if $transitions.grep(self.state).head -> $tran {
@@ -1054,8 +1135,11 @@ module Tinky:ver<0.1.1>:auth<github:jonathanstowe>:api<1.0> {
                             Tinky::X::InvalidTransition.new(message => "No transition '$name' for state '{ self.state.Str }'").throw;
                         }
                     }
+                    $method.set_name($name);
                     $!role.^add_method($name, $method);
                 }
+                $!role.^set_body_block( -> |c { });
+                $!role.^compose;
             }
             $!role;
         }
@@ -1080,11 +1164,13 @@ module Tinky:ver<0.1.1>:auth<github:jonathanstowe>:api<1.0> {
                         $SELF!state = $val;
                     }
                     else {
-                        if $SELF.transition-for-state($val) -> $trans {
-                            $SELF.apply-transition($trans);
-                        }
-                        else {
-                            Tinky::X::NoTransition.new(from => $SELF.state, to => $val).throw;
+                        if $val !~~ $SELF!state {
+                            if $SELF.transition-for-state($val) -> $trans {
+                                $SELF.apply-transition($trans);
+                            }
+                            else {
+                                Tinky::X::NoTransition.new(from => $SELF.state, to => $val).throw;
+                            }
                         }
                     }
                     $SELF!state;
@@ -1095,12 +1181,14 @@ module Tinky:ver<0.1.1>:auth<github:jonathanstowe>:api<1.0> {
         method apply-workflow(Workflow $wf) {
             my $p = $wf.validate-apply(self);
             if $p.result {
+                self.before-apply-workflow($wf);
                 $!workflow = $wf;
                 if not $!state.defined and $!workflow.initial-state.defined {
                     $!state = $!workflow.initial-state;
                 }
-                try self does $wf.role;
-                $wf.applied(self);;
+                self.^mixin($wf.role);
+                self.after-apply-workflow($wf);
+                $wf.applied(self);
             }
             else {
                 Tinky::X::ObjectRejected.new(workflow => $wf).throw;
@@ -1146,7 +1234,9 @@ module Tinky:ver<0.1.1>:auth<github:jonathanstowe>:api<1.0> {
             if $!state.defined {
                 if self ~~ $trans {
                     if await $trans.validate-apply(self) {
+                        self.before-apply-transition($trans);
                         $!state = $trans.to;
+                        self.after-apply-transition($trans);
                         $trans.applied(self);
                         $!state;
                     }
@@ -1166,6 +1256,28 @@ module Tinky:ver<0.1.1>:auth<github:jonathanstowe>:api<1.0> {
             }
             else {
                 Tinky::X::NoState.new.throw;
+            }
+        }
+
+        method before-apply-workflow(Workflow $workflow --> Nil) {
+            for self.^methods.grep(ObjectWorkflowBefore) -> $method {
+                self.$method($workflow);
+            }
+        }
+        method after-apply-workflow(Workflow $workflow --> Nil) {
+            for self.^methods.grep(ObjectWorkflowAfter) -> $method {
+                self.$method($workflow);
+            }
+        }
+
+        method before-apply-transition(Transition $transition --> Nil) {
+            for self.^methods.grep(ObjectTransitionBefore) -> $method {
+                self.$method($transition);
+            }
+        }
+        method after-apply-transition(Transition $transition --> Nil) {
+            for self.^methods.grep(ObjectTransitionAfter) -> $method {
+                self.$method($transition);
             }
         }
     }

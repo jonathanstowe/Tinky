@@ -393,7 +393,9 @@ The same rules for execution based on the signature and the object to which the 
 role Tinky::Object
 ------------------
 
-This is a role that should should be applied to any application object that is to have a state managed by [Tinky::Workflow](Tinky::Workflow), it provides the mechanisms for transition application and allows the transitions to be validated by the mechanisms described above for [Tinky::State](Tinky::State) and [Tinky::Transition](Tinky::Transition)
+This is a role that should should be applied to any application object that is to have a state managed by [Tinky::Workflow](Tinky::Workflow), it provides the mechanisms for transition application and allows the transitions to be validated by the mechanisms described above for [Tinky::State](Tinky::State) and [Tinky::Transition](Tinky::Transition).
+
+There are also method traits to define methods that will be called before and after the application of the workflow to the object, and before and after the application of a transition to the object.
 
 ### method state
 
@@ -439,6 +441,28 @@ This returns the transition that would place the object in the supplied state fr
     multi method ACCEPTS(Transition:D $trans) returns Bool
 
 Used to smart match the object against either a State (returns True if the state matches the current state of the object,) or a Transition (returns True if the `from` state matches the current state of the object.)
+
+### trait before-apply-workflow
+
+This trait can be applied to a method that will be called within the `apply-workflow` immediately after the application has been validated and before anything else occurs (primarily the setting of an initial state state if any.) The method will be called with the Workflow object as an argument.
+
+This is primarily for the benefit of implementations that may want to, for instance, retrieve the object state from some storage before setting up the rest of the workflow.
+
+### trait after-apply-workflow
+
+This trait can be applied to a method that will be called within the `apply-workflow` immediately before the Workflow's `applied` method is called with the object, that is the initial state will have been set and other changes made. The method will be called with the Workflow object as an argument.
+
+This may be helpful, for example, if one wanted to persist the initial state to some storage.
+
+### trait before-apply-transition
+
+This trait can be applied to a method that will be called within the `apply-transition` immediately after the validation has been done and before the state is actually changed. The method will be called with the Transition object as the argument.
+
+### trait after-apply-transition
+
+This trait can be applied to a method that will be called within the `apply-transition` after the state of the object has been changed and immediately before the object is passed to the transition's `applied` method. The method will be called with the Transition object as the argument.
+
+This might be used, for example, to persist the change of state of the object to some storage.
 
 EXCEPTIONS
 ----------

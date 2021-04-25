@@ -16,7 +16,7 @@ throws-like { Tinky::Workflow.new.states }, Tinky::X::NoTransitions, ".states th
 
 my Tinky::Workflow $wf;
 
-lives-ok { $wf = Tinky::Workflow.new(:@transitions) }, "create new workflow with transitions";
+lives-ok { $wf = Tinky::Workflow.new(name => 'first-test-workflow', :@transitions) }, "create new workflow with transitions";
 is $wf.transitions.elems, @transitions.elems, "and got the right number of transitions";
 is $wf.states.elems, @states.elems, "and calculated the right number of states";
 
@@ -64,8 +64,8 @@ subtest {
     my $wf = Tinky::Workflow.new(:@transitions, initial-state => @states[0]);
     ok $wf.initial-state ~~ @states[0], "just check the initial-state got set";
     my $obj = FooTest.new();
-    #lives-ok {
-    $obj.apply-workflow($wf); # }, "apply workflow with an initial-state (object has no state)";
+    lives-ok {
+    $obj.apply-workflow($wf); }, "apply workflow with an initial-state (object has no state)";
     ok $obj.state ~~ @states[0], "and the new object now has that state";
     my $new-state = Tinky::State.new(name => 'new-state');
     $obj = FooTest.new(state => $new-state);
@@ -74,6 +74,60 @@ subtest {
     nok $obj.state ~~ @states[0], "just check the comparison";
 
 }, "initial state on Workflow";
+
+subtest {
+    my class BarTest does Tinky::Object {
+        has Str $.before;
+        has Str $.after;
+
+        method before-method(Tinky::Workflow $wf) is before-apply-workflow {
+            $!before = $wf.name;
+        }
+        method after-method(Tinky::Workflow $wf) is after-apply-workflow {
+            $!after = $wf.name;
+        }
+    }
+
+    my $wf = Tinky::Workflow.new(name => 'apply-callback-test-workflow', :@transitions, initial-state => @states[0]);
+
+    my $object = BarTest.new;
+
+    lives-ok { $object.apply-workflow($wf) }, 'apply-workflow with apply callbacks';
+
+    is $object.before, $wf.name, "saw the before";
+    is $object.after, $wf.name, "saw the after";
+
+
+
+}, "apply-workflow callbacks";
+
+subtest {
+    my class ZubTest does Tinky::Object {
+        has Str $.before;
+        has Str $.after;
+
+        method before-method(Tinky::Transition $trans) is before-apply-transition {
+            $!before = $trans.name;
+        }
+        method after-method(Tinky::Transition $trans) is after-apply-transition {
+            $!after = $trans.name;
+        }
+    }
+
+    my $wf = Tinky::Workflow.new(name => 'apply-test-transition-workflow', :@transitions, initial-state => @states[0]);
+
+    my $object = ZubTest.new;
+
+    lives-ok { $object.apply-workflow($wf) }, 'apply-workflow';
+
+    lives-ok { $object.state = @states[1]; }, "apply a transition";
+
+    is $object.before, 'one-two', "saw the before";
+    is $object.after, 'one-two', "saw the after";
+
+
+
+}, "apply-transition callbacks";
 
 done-testing;
 # vim: expandtab shiftwidth=4 ft=raku
