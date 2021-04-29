@@ -772,7 +772,7 @@ current state on the object.
 
 =end pod
 
-module Tinky:ver<0.1.2>:auth<github:jonathanstowe>:api<1.0> {
+module Tinky:ver<0.1.3>:auth<github:jonathanstowe>:api<1.0> {
 
     # Stub here, definition below
     class State      { ... };
@@ -1106,7 +1106,7 @@ module Tinky:ver<0.1.2>:auth<github:jonathanstowe>:api<1.0> {
         }
 
         has Supply $!transition-supply;
-        method transition-supply( --> Supply ) {
+        multi method transition-supply( --> Supply ) {
             $!transition-supply //= do {
                 my @supplies = self.transitions.Seq.map( -> $transition { $transition.supply.map(-> $value { $transition, $value }) });
                 Supply.merge(@supplies);
