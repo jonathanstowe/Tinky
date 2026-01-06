@@ -169,4 +169,4 @@ This is free software.
 
 Please see the [LICENCE](LICENCE) file in the distribution.
 
-© Jonathan Stowe 2016 - 2021
+© Jonathan Stowe 2016 - 2026

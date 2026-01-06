@@ -27,10 +27,10 @@
     "state machine"
   ],
   "provides": {
-    "Tinky": "lib/Tinky.pm"
+    "Tinky": "lib/Tinky.rakumod"
   },
   "resources": [
   ],
-  "version": "0.1.4",
+  "version": "0.1.5",
   "name": "Tinky"
 }

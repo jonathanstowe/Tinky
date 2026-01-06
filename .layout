@@ -68,7 +68,7 @@
       "type": "directory",
       "children": [
         {
-          "name": "Tinky.pm",
+          "name": "Tinky.rakumod",
           "type": "file"
         }
       ]
